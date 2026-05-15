@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   DESIGN TOKENS — single source of truth
+   All colors in OKLCH for perceptual uniformity.
+   ========================================================================= */
+
+@theme {
+  /* —— Color (semantic, not literal) —————————————————————— */
+  --color-bg-base: oklch(0.145 0.005 270);
+  --color-bg-raised: oklch(0.175 0.006 270);
+  --color-bg-overlay: oklch(0.205 0.008 270);
+
+  --color-surface: oklch(0.225 0.010 270 / 0.72);
+  --color-surface-hi: oklch(0.265 0.012 270 / 0.84);
+  --color-surface-glass: oklch(1 0 0 / 0.04);
+
+  --color-border: oklch(0.30 0.010 270 / 0.6);
+  --color-border-strong: oklch(0.40 0.014 270 / 0.8);
+  --color-border-subtle: oklch(0.25 0.008 270 / 0.5);
+
+  --color-text-hi: oklch(0.97 0.005 270);
+  --color-text-mid: oklch(0.72 0.010 270);
+  --color-text-lo: oklch(0.48 0.012 270);
+
+  --color-accent: oklch(0.68 0.18 270);
+  --color-accent-soft: oklch(0.68 0.18 270 / 0.12);
+  --color-accent-glow: oklch(0.75 0.20 270);
+
+  --color-success: oklch(0.72 0.18 155);
+  --color-success-soft: oklch(0.72 0.18 155 / 0.12);
+  --color-danger: oklch(0.65 0.22 25);
+  --color-danger-soft: oklch(0.65 0.22 25 / 0.12);
+  --color-warning: oklch(0.78 0.16 75);
+
+  /* —— Spacing (4px grid — strict) ————————————————————————— */
+  --spacing: 0.25rem; /* 4px base, Tailwind v4 reads this */
+
+  /* —— Radius ————————————————————————————————————— */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* —— Typography ————————————————————————————————— */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Code", monospace;
+
+  /* —— Motion ————————————————————————————————————— */
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --duration-layout: 420ms;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* —— Shadows (subtle, never heavy) ————————————————————— */
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.2);
+  --shadow-md: 0 4px 16px oklch(0 0 0 / 0.25), 0 1px 3px oklch(0 0 0 / 0.15);
+  --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.35), 0 4px 12px oklch(0 0 0 / 0.2);
+  --shadow-glow: 0 0 24px oklch(0.68 0.18 270 / 0.25);
+}
+
+/* =========================================================================
+   ACCENT HUE OVERRIDES (set via <html data-accent="...">)
+   ========================================================================= */
+:root[data-accent="violet"] {
+  --color-accent: oklch(0.68 0.20 305);
+  --color-accent-soft: oklch(0.68 0.20 305 / 0.12);
+  --color-accent-glow: oklch(0.75 0.22 305);
+}
+:root[data-accent="blue"] {
+  --color-accent: oklch(0.68 0.16 240);
+  --color-accent-soft: oklch(0.68 0.16 240 / 0.12);
+  --color-accent-glow: oklch(0.75 0.18 240);
+}
+:root[data-accent="teal"] {
+  --color-accent: oklch(0.72 0.14 195);
+  --color-accent-soft: oklch(0.72 0.14 195 / 0.12);
+  --color-accent-glow: oklch(0.78 0.16 195);
+}
+:root[data-accent="rose"] {
+  --color-accent: oklch(0.70 0.20 10);
+  --color-accent-soft: oklch(0.70 0.20 10 / 0.12);
+  --color-accent-glow: oklch(0.76 0.22 10);
+}
+:root[data-accent="amber"] {
+  --color-accent: oklch(0.78 0.16 70);
+  --color-accent-soft: oklch(0.78 0.16 70 / 0.12);
+  --color-accent-glow: oklch(0.84 0.18 70);
+}
+
+/* =========================================================================
+   DENSITY (set via <html data-density="...">)
+   ========================================================================= */
+:root[data-density="compact"] {
+  --density-pad-x: 0.75rem;
+  --density-pad-y: 0.625rem;
+  --density-pad-header-y: 0.5rem;
+  --density-gap: 0.5rem;
+}
+:root[data-density="comfortable"],
+:root:not([data-density]) {
+  --density-pad-x: 1rem;
+  --density-pad-y: 0.875rem;
+  --density-pad-header-y: 0.75rem;
+  --density-gap: 0.75rem;
+}
+:root[data-density="spacious"] {
+  --density-pad-x: 1.25rem;
+  --density-pad-y: 1.125rem;
+  --density-pad-header-y: 0.875rem;
+  --density-gap: 1rem;
+}
+
+/* =========================================================================
+   Z-INDEX SCALE
+   ========================================================================= */
+:root {
+  --z-base: 0;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-drawer: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+  --z-palette: 600;
+  --z-toast: 700;
+  --z-tooltip: 800;
+}
+
+/* =========================================================================
+   BASE
+   ========================================================================= */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+
+  html,
+  body {
+    height: 100%;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-hi);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01", "ss03";
+    font-variation-settings: "opsz" 14;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    overscroll-behavior-y: none;
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-soft);
+    color: var(--color-text-hi);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-lo);
+  }
+
+  /* Focus rings — never invisible */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  /* Tabular numerics globally available */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* =========================================================================
+   UTILITY PRIMITIVES — glass + ambient background
+   ========================================================================= */
+@layer components {
+  .glass {
+    background-color: var(--color-surface);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    border: 1px solid var(--color-border);
+  }
+
+  .glass-hi {
+    background-color: var(--color-surface-hi);
+    backdrop-filter: blur(14px) saturate(1.25);
+    -webkit-backdrop-filter: blur(14px) saturate(1.25);
+    border: 1px solid var(--color-border-strong);
+  }
+
+  /* Subtle radial ambient — anchors the dark canvas without being neon */
+  .ambient-bg {
+    position: relative;
+    isolation: isolate;
+  }
+  .ambient-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 0%, oklch(0.68 0.18 270 / 0.06), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, oklch(0.68 0.18 320 / 0.05), transparent 60%);
+  }
+}
+
+/* =========================================================================
+   MOTION — keyframes & reduced motion
+   ========================================================================= */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 6px var(--color-success);
+  }
+  50% {
+    box-shadow: 0 0 14px var(--color-success), 0 0 28px oklch(0.72 0.18 155 / 0.3);
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
