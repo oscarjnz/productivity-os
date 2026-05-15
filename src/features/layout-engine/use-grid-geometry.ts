@@ -9,8 +9,8 @@ import type { GridConfig, GridGeometry } from "./types";
  */
 export function useGridGeometry(
   config: GridConfig,
-): { ref: RefObject<HTMLDivElement | null>; geometry: GridGeometry } {
-  const ref = useRef<HTMLDivElement | null>(null);
+): { ref: RefObject<HTMLDivElement>; geometry: GridGeometry } {
+  const ref = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
   useEffect(() => {

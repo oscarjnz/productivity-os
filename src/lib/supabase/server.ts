@@ -2,11 +2,12 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import { supabaseEnv } from "./env";
 
-type Client = SupabaseClient<Database>;
+// Derive from the factory so the generic arity always matches the installed
+// @supabase/ssr version (avoids SupabaseClient<Database> shape drift).
+type Client = ReturnType<typeof createServerClient<Database>>;
 
 /**
  * Server-side Supabase client for RSC and route handlers.

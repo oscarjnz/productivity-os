@@ -9,6 +9,7 @@ import type { WidgetInstance } from "@/types/widget.types";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type CloudWidget = Tables<"widget_instances">;
+type CloudDashboard = Tables<"dashboards">;
 
 function fromCloud(row: CloudWidget): WidgetInstance {
   return {
@@ -61,14 +62,15 @@ export async function runInitialSync(userId: string): Promise<InitialSyncResult>
   if (!supabase || !db) return { status: "skipped", reason: "no_client" };
 
   // 1. Find user's default dashboard
-  const { data: dashboards, error: dErr } = await supabase
+  const { data: dashboardsRaw, error: dErr } = await supabase
     .from("dashboards")
     .select("*")
     .eq("user_id", userId)
     .eq("is_default", true)
     .limit(1);
 
-  if (dErr || !dashboards || dashboards.length === 0) {
+  const dashboards = (dashboardsRaw ?? []) as unknown as CloudDashboard[];
+  if (dErr || dashboards.length === 0) {
     return { status: "skipped", reason: dErr?.message ?? "no_default_dashboard" };
   }
 
@@ -76,10 +78,11 @@ export async function runInitialSync(userId: string): Promise<InitialSyncResult>
   const dashboardId = dashboard.id;
 
   // 2. Pull cloud widgets
-  const { data: cloudWidgets, error: wErr } = await supabase
+  const { data: cloudWidgetsRaw, error: wErr } = await supabase
     .from("widget_instances")
     .select("*")
     .eq("dashboard_id", dashboardId);
+  const cloudWidgets = (cloudWidgetsRaw ?? []) as unknown as CloudWidget[];
 
   if (wErr) return { status: "skipped", reason: wErr.message };
 
@@ -89,16 +92,16 @@ export async function runInitialSync(userId: string): Promise<InitialSyncResult>
   // placeholder dashboardId and would 409 anyway.
   await db.outbox.where("entity").equals("widget_instances").delete();
 
-  if ((cloudWidgets?.length ?? 0) > 0) {
+  if (cloudWidgets.length > 0) {
     // Cloud wins: replace local with cloud.
     await db.widget_instances.clear();
-    for (const row of cloudWidgets!) {
+    for (const row of cloudWidgets) {
       await db.widget_instances.put({
         ...row,
         config: (row.config as Record<string, unknown>) ?? {},
       });
     }
-    useLayoutStore.getState()._replaceAll(cloudWidgets!.map(fromCloud));
+    useLayoutStore.getState()._replaceAll(cloudWidgets.map(fromCloud));
     return { status: "pulled", dashboardId };
   }
 
@@ -110,7 +113,7 @@ export async function runInitialSync(userId: string): Promise<InitialSyncResult>
     for (const row of localWidgets) {
       const remapped = { ...row, dashboard_id: dashboardId };
       await db.widget_instances.put(remapped);
-      const inst = fromCloud(remapped);
+      const inst = fromCloud(remapped as unknown as CloudWidget);
       remappedInstances.push(inst);
       await enqueueOp("widget_instances", "insert", inst.id, toCloudRow(inst, dashboardId));
     }

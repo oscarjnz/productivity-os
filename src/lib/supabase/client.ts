@@ -1,11 +1,12 @@
 "use client";
 
 import { createBrowserClient, type CookieOptions } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import { supabaseEnv } from "./env";
 
-type Client = SupabaseClient<Database>;
+// Derive from the factory so the generic arity always matches the installed
+// @supabase/ssr version (avoids SupabaseClient<Database> shape drift).
+type Client = ReturnType<typeof createBrowserClient<Database>>;
 
 let _client: Client | null = null;
 

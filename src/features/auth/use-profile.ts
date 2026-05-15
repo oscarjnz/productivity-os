@@ -46,7 +46,7 @@ export function useProfile() {
       setError(null);
       const { error: err } = await supabase
         .from("profiles")
-        .update(patch)
+        .update(patch as never)
         .eq("id", user.id);
       if (err) {
         setError(err.message);

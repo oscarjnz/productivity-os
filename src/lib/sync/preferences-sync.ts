@@ -26,7 +26,7 @@ export async function pullPreferences(userId: string): Promise<void> {
     .single();
 
   if (error || !data) return;
-  const cloud = (data.preferences as CloudPreferences) ?? {};
+  const cloud = ((data as { preferences?: unknown }).preferences as CloudPreferences) ?? {};
 
   const state = usePrefsStore.getState();
   if (cloud.density && cloud.density !== state.density) state.setDensity(cloud.density);
@@ -50,6 +50,6 @@ export async function pushPreferences(userId: string): Promise<void> {
     .from("profiles")
     .update({
       preferences: { density, accent, reducedMotion, locale, timezone },
-    })
+    } as never)
     .eq("id", userId);
 }

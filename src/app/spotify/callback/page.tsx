@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Check, AlertTriangle } from "lucide-react";
 import { completeSpotifyAuth } from "@/features/widgets/spotify/oauth";
 import { cn } from "@/lib/utils/cn";
 
+// Depends on query params — never prerender.
+export const dynamic = "force-dynamic";
+
 type Status = "exchanging" | "ok" | "error";
 
-export default function SpotifyCallbackPage() {
+function SpotifyCallbackInner() {
   const router = useRouter();
   const params = useSearchParams();
   const [status, setStatus] = useState<Status>("exchanging");
@@ -77,5 +80,19 @@ export default function SpotifyCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SpotifyCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="ambient-bg flex min-h-dvh items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--color-accent)]" aria-hidden />
+        </div>
+      }
+    >
+      <SpotifyCallbackInner />
+    </Suspense>
   );
 }

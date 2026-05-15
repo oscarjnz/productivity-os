@@ -1,12 +1,20 @@
 import type { WidgetDefinition } from "@/types/widget.types";
 
 /**
+ * The registry is intentionally heterogeneous — every entry has a different
+ * config shape. `WidgetDefinition<any>` is the correct boundary type here:
+ * config typing is enforced *inside* each widget, not at the registry edge.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyWidgetDefinition = WidgetDefinition<any>;
+
+/**
  * Lazy widget registry.
  * Each entry returns a Promise resolving to its WidgetDefinition.
  *
  * Adding a widget = adding one line here.
  */
-export const widgetRegistry: Record<string, () => Promise<WidgetDefinition>> = {
+export const widgetRegistry: Record<string, () => Promise<AnyWidgetDefinition>> = {
   clock: () => import("@/features/widgets/clock").then((m) => m.clockWidget),
   weather: () => import("@/features/widgets/weather").then((m) => m.weatherWidget),
   tasks: () => import("@/features/widgets/tasks").then((m) => m.tasksWidget),
@@ -23,7 +31,7 @@ export const widgetRegistry: Record<string, () => Promise<WidgetDefinition>> = {
 
 export type WidgetType = keyof typeof widgetRegistry;
 
-export async function loadWidget(type: string): Promise<WidgetDefinition | null> {
+export async function loadWidget(type: string): Promise<AnyWidgetDefinition | null> {
   const loader = widgetRegistry[type];
   if (!loader) return null;
   try {
@@ -37,8 +45,8 @@ export async function loadWidget(type: string): Promise<WidgetDefinition | null>
  * Eagerly load *all* widget definitions. Used by the picker and palette
  * to display the full catalog. Cached on first call.
  */
-let catalogCache: Promise<WidgetDefinition[]> | null = null;
-export function loadAllWidgets(): Promise<WidgetDefinition[]> {
+let catalogCache: Promise<AnyWidgetDefinition[]> | null = null;
+export function loadAllWidgets(): Promise<AnyWidgetDefinition[]> {
   if (!catalogCache) {
     catalogCache = Promise.all(
       Object.values(widgetRegistry).map((loader) => loader()),
