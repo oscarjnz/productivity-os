@@ -5,6 +5,6 @@ export interface CalendarConfig {
 }
 
 export const defaultCalendarConfig: CalendarConfig = {
-  daysAhead: 1,
-  maxEvents: 10,
+  daysAhead: 7,
+  maxEvents: 25,
 };

@@ -12,8 +12,8 @@ import type { CalendarConfig } from "./config";
 
 const RANGE_OPTIONS = [
   { value: "1", label: "Today" },
-  { value: "3", label: "3 days" },
   { value: "7", label: "Week" },
+  { value: "31", label: "Month" },
 ];
 
 export function CalendarSettings({ config, onChange }: WidgetSettingsProps<CalendarConfig>) {
