@@ -274,6 +274,10 @@ function BookmarkRow({ bookmark, existingGroups, onUpdate, onRemove }: BookmarkR
         <img
           src={faviconUrl(bookmark.url)}
           alt=""
+          width={16}
+          height={16}
+          loading="lazy"
+          decoding="async"
           className="h-4 w-4 rounded-[3px]"
           onError={(e) => ((e.target as HTMLImageElement).style.display = "none")}
         />

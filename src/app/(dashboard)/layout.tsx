@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
-import { CommandPalette } from "@/features/command-palette/command-palette";
-import { WelcomeBanner } from "@/features/onboarding/welcome-banner";
 import { useGlobalShortcuts } from "@/lib/hooks/use-global-shortcuts";
 import { hydrateLayoutFromDb } from "@/stores/layout.store";
+
+// Off the critical path: cmdk (palette) and the onboarding banner aren't
+// needed for first paint. Loading them lazily trims the initial bundle.
+const CommandPalette = dynamic(
+  () => import("@/features/command-palette/command-palette").then((m) => m.CommandPalette),
+  { ssr: false },
+);
+const WelcomeBanner = dynamic(
+  () => import("@/features/onboarding/welcome-banner").then((m) => m.WelcomeBanner),
+  { ssr: false },
+);
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   useGlobalShortcuts();

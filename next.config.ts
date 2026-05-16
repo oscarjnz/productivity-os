@@ -6,7 +6,18 @@ const config: NextConfig = {
   poweredByHeader: false,
   compress: true,
   experimental: {
-    optimizePackageImports: ["lucide-react", "motion", "@radix-ui/react-slot"],
+    optimizePackageImports: [
+      "lucide-react",
+      "motion",
+      "cmdk",
+      "@radix-ui/react-slot",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-popover",
+      "@radix-ui/react-tooltip",
+      "@dnd-kit/core",
+      "@dnd-kit/sortable",
+      "@tanstack/react-query",
+    ],
   },
   images: {
     formats: ["image/avif", "image/webp"],

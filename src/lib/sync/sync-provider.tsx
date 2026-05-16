@@ -6,6 +6,7 @@ import { subscribeWidgetInstances } from "./realtime";
 import { subscribeTasks, subscribeNotes, subscribeBookmarks } from "./entity-sync";
 import { useAuth } from "@/features/auth/auth-provider";
 import { useLayoutStore } from "@/stores/layout.store";
+import { useToastStore } from "@/stores/toast.store";
 
 interface SyncContextValue {
   status: SyncStatus;
@@ -20,6 +21,21 @@ const SyncContext = createContext<SyncContextValue>({
 export function SyncProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SyncStatus>("idle");
   const { user } = useAuth();
+
+  // Surface a sticky toast while sync is in the error state; clear it on
+  // recovery. Deduped by a fixed id so a repeating failure never stacks.
+  useEffect(() => {
+    if (status === "error") {
+      useToastStore.getState().push({
+        id: "sync-error",
+        kind: "error",
+        message: "Cloud sync failed — changes are saved locally and will retry.",
+        duration: 0,
+      });
+    } else {
+      useToastStore.getState().dismiss("sync-error");
+    }
+  }, [status]);
 
   // 1. Drain engine — runs whether or not logged in.
   useEffect(() => {

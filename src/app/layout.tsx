@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "Productivity OS",
   description: "A personal operating system for focus and control.",
   applicationName: "Productivity OS",
-  icons: { icon: "/favicon.ico" },
+  // Icon resolved automatically from src/app/icon.svg (App Router convention).
 };
 
 export const viewport: Viewport = {

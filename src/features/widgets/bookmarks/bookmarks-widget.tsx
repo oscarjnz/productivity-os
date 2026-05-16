@@ -189,6 +189,10 @@ function SortableBookmark({ bookmark: b }: { bookmark: DbBookmark }) {
           <img
             src={faviconUrl(b.url)}
             alt=""
+            width={20}
+            height={20}
+            loading="lazy"
+            decoding="async"
             draggable={false}
             className="h-5 w-5 rounded-[4px]"
             onError={(e) => ((e.target as HTMLImageElement).style.display = "none")}

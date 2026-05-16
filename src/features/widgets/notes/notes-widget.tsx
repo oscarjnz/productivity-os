@@ -26,9 +26,14 @@ function NoteCard({ id, content, colorIndex, onChange, onColor, onDelete, autoFo
   const [editing, setEditing] = useState(!!autoFocus || content.length === 0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
+  // True while there are local edits not yet persisted. Guards against a
+  // realtime/cloud update silently overwriting unsaved text (the data-loss
+  // window). Not a full CRDT — see note in summary — but closes the common case.
+  const dirtyRef = useRef(false);
 
   useEffect(() => {
-    if (document.activeElement === taRef.current) return;
+    // Don't clobber local edits in flight: skip if focused OR dirty.
+    if (document.activeElement === taRef.current || dirtyRef.current) return;
     setLocal(content);
   }, [content]);
 
@@ -41,8 +46,12 @@ function NoteCard({ id, content, colorIndex, onChange, onColor, onDelete, autoFo
   const handleChange = useCallback(
     (next: string) => {
       setLocal(next);
+      dirtyRef.current = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => onChange(id, next), 400);
+      debounceRef.current = setTimeout(() => {
+        onChange(id, next);
+        dirtyRef.current = false;
+      }, 400);
     },
     [id, onChange],
   );
@@ -54,6 +63,7 @@ function NoteCard({ id, content, colorIndex, onChange, onColor, onDelete, autoFo
       onChange(id, local);
       debounceRef.current = null;
     }
+    dirtyRef.current = false;
     setEditing(false);
   };
 
@@ -172,7 +182,7 @@ function NotesWidgetInner({ config }: WidgetProps<NotesConfig>) {
               No notes yet — click <span className="mx-1 text-[var(--color-accent)]">New</span> to add one.
             </motion.div>
           ) : (
-            notes.map((n) => (
+            notes.slice(0, 150).map((n) => (
               <NoteCard
                 key={n.id}
                 id={n.id}
@@ -184,6 +194,11 @@ function NotesWidgetInner({ config }: WidgetProps<NotesConfig>) {
                 onDelete={(id) => void remove(id)}
               />
             ))
+          )}
+          {notes.length > 150 && (
+            <div className="col-span-full py-2 text-center text-[11px] text-[var(--color-text-lo)]">
+              +{notes.length - 150} more notes not shown
+            </div>
           )}
         </AnimatePresence>
       </div>

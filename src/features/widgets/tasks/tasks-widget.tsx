@@ -46,6 +46,13 @@ function TasksWidgetInner({ config }: WidgetProps<TasksConfig>) {
     return tasks;
   }, [tasks, filter]);
 
+  // Cap the DOM to keep a runaway list from janking the dashboard. Full
+  // virtualization would mean a windowing lib (bundle cost) for a case that's
+  // rare in a single-user app — the cap + filters cover it.
+  const RENDER_CAP = 150;
+  const capped = useMemo(() => visible.slice(0, RENDER_CAP), [visible]);
+  const overflow = visible.length - capped.length;
+
   const pendingCount = useMemo(() => tasks.filter((t) => !t.completed).length, [tasks]);
   const hasCompleted = useMemo(() => tasks.some((t) => t.completed), [tasks]);
 
@@ -160,7 +167,7 @@ function TasksWidgetInner({ config }: WidgetProps<TasksConfig>) {
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={visible.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={capped.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           <ul className="-mr-1 flex flex-1 flex-col gap-1 overflow-y-auto pr-1">
             <AnimatePresence initial={false}>
               {visible.length === 0 && (
@@ -174,7 +181,7 @@ function TasksWidgetInner({ config }: WidgetProps<TasksConfig>) {
                   {filter === "done" ? "Nothing completed yet." : "Nothing here — enjoy your day."}
                 </motion.li>
               )}
-              {visible.map((t) => (
+              {capped.map((t) => (
                 <SortableRow
                   key={t.id}
                   task={t}
@@ -182,6 +189,11 @@ function TasksWidgetInner({ config }: WidgetProps<TasksConfig>) {
                   onRemove={() => void remove(t.id)}
                 />
               ))}
+              {overflow > 0 && (
+                <li className="py-2 text-center text-[11px] text-[var(--color-text-lo)]">
+                  +{overflow} more — use a filter to narrow
+                </li>
+              )}
             </AnimatePresence>
           </ul>
         </SortableContext>
