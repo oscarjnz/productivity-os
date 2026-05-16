@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CheckCircle2, AlertTriangle, Info, X, TriangleAlert } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { useToastStore, type ToastKind } from "@/stores/toast.store";
 import { cn } from "@/lib/utils/cn";
 import { duration as motionDuration, easing } from "@/config/motion";
@@ -68,7 +69,9 @@ function ToastRow({ id }: { id: string }) {
 }
 
 export function Toaster() {
-  const ids = useToastStore((s) => s.toasts.map((t) => t.id));
+  // useShallow: the selector builds a NEW array every render; without a
+  // shallow compare zustand v5 (Object.is) re-renders forever → React #185.
+  const ids = useToastStore(useShallow((s) => s.toasts.map((t) => t.id)));
   return (
     <div className="pointer-events-none fixed bottom-4 right-4 z-[var(--z-toast)] flex flex-col gap-2">
       <AnimatePresence initial={false}>
