@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useApiKey } from "./use-api-key";
 import { useChatMessages, useChat } from "./use-chat";
 import { resolveAIChatConfig } from "./config";
-import { getProvider, type ProviderDef } from "./providers";
+import { getProvider, effectiveKey, type ProviderDef } from "./providers";
 import { Markdown } from "@/components/ui/markdown";
 import { cn } from "@/lib/utils/cn";
 import { duration, easing } from "@/config/motion";
@@ -31,7 +31,8 @@ function ApiKeyGate({
           {provider.label} API key
         </div>
         <div className="text-[11.5px] leading-snug text-[var(--color-text-lo)]">
-          Stays in your browser. Never sent to Supabase or any server.
+          Se queda en tu navegador. Nunca se envía a Supabase ni a ningún
+          servidor.
         </div>
       </div>
       <form
@@ -46,7 +47,7 @@ function ApiKeyGate({
           value={val}
           autoComplete="off"
           onChange={(e) => setVal(e.target.value)}
-          placeholder="Paste key…"
+          placeholder="Pega tu clave…"
           className={cn(
             "w-full rounded-[var(--radius-sm)]",
             "border border-[var(--color-border)] bg-[var(--color-bg-base)]",
@@ -68,7 +69,7 @@ function ApiKeyGate({
             "disabled:opacity-40 active:scale-[0.98]",
           )}
         >
-          Save key
+          Guardar clave
         </button>
       </form>
       <a
@@ -77,12 +78,12 @@ function ApiKeyGate({
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1 text-[10.5px] text-[var(--color-accent)] hover:underline"
       >
-        Get a {provider.label} key
+        Conseguir una clave de {provider.label}
         <ExternalLink className="h-2.5 w-2.5" aria-hidden />
       </a>
       <div className="flex items-center gap-1 text-[10px] text-[var(--color-text-lo)]">
         <Lock className="h-2.5 w-2.5" aria-hidden />
-        IndexedDB only
+        Solo en IndexedDB
       </div>
     </div>
   );
@@ -92,8 +93,10 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
   const cfg = useMemo(() => resolveAIChatConfig(config), [config]);
   const provider = useMemo(() => getProvider(cfg.provider), [cfg.provider]);
   const { apiKey, setApiKey } = useApiKey(cfg.provider);
+  // User key overrides; otherwise the provider's built-in key (Groq) is used.
+  const usableKey = useMemo(() => effectiveKey(provider, apiKey), [provider, apiKey]);
   const messages = useChatMessages(instanceId);
-  const { send, clear, isSending, error } = useChat(instanceId, cfg, apiKey);
+  const { send, clear, isSending, error } = useChat(instanceId, cfg, usableKey);
   const [input, setInput] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -115,7 +118,7 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
     [input, isSending, send],
   );
 
-  if (provider.requiresKey && !apiKey) {
+  if (provider.requiresKey && !usableKey) {
     return <ApiKeyGate provider={provider} onSave={(k) => void setApiKey(k)} />;
   }
 
@@ -133,7 +136,7 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
             className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-lo)] hover:text-[var(--color-text-mid)]"
           >
             <Trash2 className="h-3 w-3" aria-hidden />
-            Clear
+            Limpiar
           </button>
         )}
       </div>
@@ -144,7 +147,7 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
       >
         {messages.length === 0 && !isSending && (
           <div className="flex flex-1 items-center justify-center px-4 text-center text-[11.5px] text-[var(--color-text-lo)]">
-            Ask anything — quick notes, ideas, summaries.
+            Pregunta lo que quieras — notas rápidas, ideas, resúmenes.
           </div>
         )}
 
@@ -201,7 +204,7 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={isSending ? "Thinking…" : "Message…"}
+          placeholder={isSending ? "Pensando…" : "Escribe un mensaje…"}
           disabled={isSending}
           className={cn(
             "flex-1 rounded-[var(--radius-sm)]",

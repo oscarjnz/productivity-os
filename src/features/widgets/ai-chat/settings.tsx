@@ -92,9 +92,21 @@ export function AIChatSettings({ config, onChange }: WidgetSettingsProps<AIChatC
       </Field>
 
       <Field
-        label={provider.requiresKey ? "API key" : "API key (optional)"}
-        hint="Stored only in this browser, per provider."
+        label={
+          provider.builtInKey && !apiKey
+            ? "API key (incluida — opcional)"
+            : provider.requiresKey
+              ? "API key"
+              : "API key (opcional)"
+        }
+        hint="Se guarda solo en este navegador, por proveedor."
       >
+        {!apiKey && provider.builtInKey && (
+          <div className="mb-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-base)] px-2.5 py-1.5 text-[11px] text-[var(--color-text-mid)]">
+            ✓ Usando la clave incluida — funciona sin configurar nada. Añade la
+            tuya solo si quieres tu propia cuota.
+          </div>
+        )}
         {apiKey ? (
           <div className="flex items-center justify-between gap-2 text-[12px] text-[var(--color-text-mid)]">
             <code className="truncate text-[11px]">…{apiKey.slice(-6)}</code>
@@ -138,7 +150,7 @@ export function AIChatSettings({ config, onChange }: WidgetSettingsProps<AIChatC
           rel="noopener noreferrer"
           className="mt-1 inline-flex items-center gap-1 text-[11px] text-[var(--color-accent)] hover:underline"
         >
-          Get a {provider.label} key
+          Conseguir tu propia clave
           <ExternalLink className="h-2.5 w-2.5" aria-hidden />
         </a>
       </Field>

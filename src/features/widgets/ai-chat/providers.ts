@@ -24,9 +24,29 @@ export interface ProviderDef {
   editableBaseUrl: boolean;
   /** Where to get the key. */
   docsUrl: string;
+  /**
+   * Shipped key so the product works out of the box for everyone with zero
+   * setup. A user-entered key (Dexie) always overrides this. Shared/public
+   * by design — subject to rate limits on the shared quota.
+   */
+  builtInKey?: string;
 }
 
 export const PROVIDERS: ProviderDef[] = [
+  {
+    id: "groq",
+    label: "Groq · incluido (sin clave)",
+    kind: "openai",
+    defaultBaseUrl: "https://api.groq.com/openai/v1",
+    models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
+    requiresKey: true,
+    editableBaseUrl: false,
+    docsUrl: "https://console.groq.com/keys",
+    // Injected at build time (next inlines NEXT_PUBLIC_* into the bundle).
+    // Keeps the literal key out of the repo while still shipping zero-setup
+    // Groq to every user. Set it in .env.local BEFORE `npm run build`.
+    builtInKey: process.env.NEXT_PUBLIC_GROQ_BUILTIN_KEY || undefined,
+  },
   {
     id: "anthropic",
     label: "Anthropic (Claude)",
@@ -66,16 +86,6 @@ export const PROVIDERS: ProviderDef[] = [
     requiresKey: true,
     editableBaseUrl: false,
     docsUrl: "https://platform.deepseek.com/api_keys",
-  },
-  {
-    id: "groq",
-    label: "Groq",
-    kind: "openai",
-    defaultBaseUrl: "https://api.groq.com/openai/v1",
-    models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
-    requiresKey: true,
-    editableBaseUrl: false,
-    docsUrl: "https://console.groq.com/keys",
   },
   {
     id: "xai",
@@ -131,4 +141,12 @@ export function getProvider(id: string): ProviderDef {
 
 export function apiKeyMetaKey(providerId: string): string {
   return `ai.key.${providerId}`;
+}
+
+/**
+ * The key actually used for a request: a user-entered key always wins;
+ * otherwise fall back to the provider's shipped built-in key (Groq).
+ */
+export function effectiveKey(provider: ProviderDef, userKey: string | null): string | null {
+  return (userKey && userKey.trim()) || provider.builtInKey || null;
 }
