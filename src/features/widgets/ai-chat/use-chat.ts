@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { getDb, type DbChatMessage } from "@/lib/db/dexie";
 import { newRowId, nowIso } from "@/lib/db/helpers";
 import { getProvider } from "./providers";
+import { buildDashboardContext } from "./context";
 import type { AIChatConfig } from "./config";
 
 interface ChatMsg {
@@ -75,6 +76,7 @@ function buildRequest(
   config: AIChatConfig,
   apiKey: string | null,
   messages: ChatMsg[],
+  systemPrompt: string,
 ): RequestPlan {
   const provider = getProvider(config.provider);
   const base = (config.baseUrl.trim() || provider.defaultBaseUrl).replace(/\/+$/, "");
@@ -91,7 +93,7 @@ function buildRequest(
       body: JSON.stringify({
         model: config.model,
         max_tokens: config.maxTokens,
-        system: config.systemPrompt,
+        system: systemPrompt,
         messages,
         stream: true,
       }),
@@ -118,7 +120,7 @@ function buildRequest(
       model: config.model,
       max_tokens: config.maxTokens,
       messages: [
-        { role: "system", content: config.systemPrompt },
+        { role: "system", content: systemPrompt },
         ...messages,
       ],
       stream: true,
@@ -195,7 +197,17 @@ export function useChat(
       });
 
       try {
-        const plan = buildRequest(config, apiKey, messages);
+        // Inject real dashboard data so the model uses facts, not guesses.
+        // Best-effort: if it fails, fall back to the bare system prompt.
+        let systemPrompt = config.systemPrompt;
+        try {
+          const ctx = await buildDashboardContext();
+          if (ctx) systemPrompt = `${config.systemPrompt}\n\n${ctx}`;
+        } catch {
+          /* keep bare prompt */
+        }
+
+        const plan = buildRequest(config, apiKey, messages, systemPrompt);
         const res = await fetch(plan.url, {
           method: "POST",
           headers: plan.headers,
