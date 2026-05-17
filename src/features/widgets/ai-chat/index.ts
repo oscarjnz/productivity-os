@@ -7,7 +7,7 @@ import { defaultAIChatConfig, type AIChatConfig } from "./config";
 export const aiChatWidget: WidgetDefinition<AIChatConfig> = {
   type: "ai-chat",
   name: "AI Chat",
-  description: "BYOK Claude chat — key stays local, no server.",
+  description: "BYOK chat — Claude, OpenAI, Gemini, DeepSeek, Ollama & more.",
   icon: Sparkles,
   category: "personal",
   defaultSize: { w: 5, h: 6 },

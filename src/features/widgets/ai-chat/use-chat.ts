@@ -4,9 +4,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useCallback, useState } from "react";
 import { getDb, type DbChatMessage } from "@/lib/db/dexie";
 import { newRowId, nowIso } from "@/lib/db/helpers";
+import { getProvider } from "./providers";
 import type { AIChatConfig } from "./config";
 
-interface AnthropicMessage {
+interface ChatMsg {
   role: "user" | "assistant";
   content: string;
 }
@@ -32,8 +33,8 @@ export interface ChatMutations {
 }
 
 /**
- * Parse Anthropic SSE stream: events separated by blank lines, each starting
- * with `data: ` (sometimes preceded by `event: ...`). Yields each parsed JSON.
+ * Generic SSE line parser — works for both Anthropic and OpenAI-compatible
+ * streams (both emit `data: {json}` lines separated by blank lines).
  */
 async function* parseSSE(stream: ReadableStream<Uint8Array>): AsyncGenerator<unknown> {
   const reader = stream.getReader();
@@ -62,6 +63,86 @@ async function* parseSSE(stream: ReadableStream<Uint8Array>): AsyncGenerator<unk
   }
 }
 
+interface RequestPlan {
+  url: string;
+  headers: Record<string, string>;
+  body: string;
+  /** Pull the incremental text out of one parsed SSE event. */
+  extractDelta: (ev: unknown) => string;
+}
+
+function buildRequest(
+  config: AIChatConfig,
+  apiKey: string | null,
+  messages: ChatMsg[],
+): RequestPlan {
+  const provider = getProvider(config.provider);
+  const base = (config.baseUrl.trim() || provider.defaultBaseUrl).replace(/\/+$/, "");
+
+  if (provider.kind === "anthropic") {
+    return {
+      url: `${base}/messages`,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey ?? "",
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: config.model,
+        max_tokens: config.maxTokens,
+        system: config.systemPrompt,
+        messages,
+        stream: true,
+      }),
+      extractDelta: (ev) => {
+        const e = ev as { type?: string; delta?: { type?: string; text?: string } };
+        return e.type === "content_block_delta" &&
+          e.delta?.type === "text_delta" &&
+          e.delta.text
+          ? e.delta.text
+          : "";
+      },
+    };
+  }
+
+  // OpenAI-compatible (OpenAI, DeepSeek, Gemini, Groq, xAI, Mistral,
+  // OpenRouter, Ollama, LM Studio, …)
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (apiKey) headers["authorization"] = `Bearer ${apiKey}`;
+
+  return {
+    url: `${base}/chat/completions`,
+    headers,
+    body: JSON.stringify({
+      model: config.model,
+      max_tokens: config.maxTokens,
+      messages: [
+        { role: "system", content: config.systemPrompt },
+        ...messages,
+      ],
+      stream: true,
+    }),
+    extractDelta: (ev) => {
+      const e = ev as { choices?: Array<{ delta?: { content?: string } }> };
+      return e.choices?.[0]?.delta?.content ?? "";
+    },
+  };
+}
+
+function parseError(status: number, body: string, providerLabel: string): string {
+  try {
+    const p = JSON.parse(body) as {
+      error?: { message?: string } | string;
+    };
+    if (typeof p.error === "string") return p.error;
+    if (p.error?.message) return p.error.message;
+  } catch {
+    /* fall through */
+  }
+  return `${providerLabel} API ${status}`;
+}
+
 export function useChat(
   instanceId: string,
   config: AIChatConfig,
@@ -75,7 +156,13 @@ export function useChat(
       const db = getDb();
       if (!db) return;
       const content = text.trim();
-      if (!content || !apiKey) return;
+      if (!content) return;
+
+      const provider = getProvider(config.provider);
+      if (provider.requiresKey && !apiKey) {
+        setError(`Add your ${provider.label} API key in settings.`);
+        return;
+      }
 
       setError(null);
       setSending(true);
@@ -94,49 +181,29 @@ export function useChat(
         .equals(instanceId)
         .sortBy("created_at");
 
-      const messages: AnthropicMessage[] = history
+      const messages: ChatMsg[] = history
         .filter((m) => m.role === "user" || m.role === "assistant")
         .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
 
-      // Create an empty assistant placeholder we'll fill as tokens stream in.
       const assistantId = newRowId();
-      const assistantBase: DbChatMessage = {
+      await db.chat_messages.put({
         id: assistantId,
         instance_id: instanceId,
         role: "assistant",
         content: "",
         created_at: nowIso(),
-      };
-      await db.chat_messages.put(assistantBase);
+      });
 
       try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
+        const plan = buildRequest(config, apiKey, messages);
+        const res = await fetch(plan.url, {
           method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-            "anthropic-dangerous-direct-browser-access": "true",
-          },
-          body: JSON.stringify({
-            model: config.model,
-            max_tokens: config.maxTokens,
-            system: config.systemPrompt,
-            messages,
-            stream: true,
-          }),
+          headers: plan.headers,
+          body: plan.body,
         });
 
         if (!res.ok) {
-          const body = await res.text();
-          let msg = `Anthropic API ${res.status}`;
-          try {
-            const parsed = JSON.parse(body) as { error?: { message?: string } };
-            if (parsed.error?.message) msg = parsed.error.message;
-          } catch {
-            /* ignore */
-          }
-          throw new Error(msg);
+          throw new Error(parseError(res.status, await res.text(), provider.label));
         }
         if (!res.body) throw new Error("No response stream");
 
@@ -150,16 +217,12 @@ export function useChat(
         };
 
         for await (const event of parseSSE(res.body)) {
-          const ev = event as {
-            type?: string;
-            delta?: { type?: string; text?: string };
-          };
-          if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta" && ev.delta.text) {
-            acc += ev.delta.text;
+          const piece = plan.extractDelta(event);
+          if (piece) {
+            acc += piece;
             await flush();
           }
         }
-
         await flush(true);
 
         if (acc.trim().length === 0) {
@@ -169,8 +232,6 @@ export function useChat(
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);
-        // Roll back both the user message and the (likely partial) assistant
-        // message so the input stays useful.
         await db.chat_messages.delete(userMsg.id);
         await db.chat_messages.delete(assistantId).catch(() => undefined);
       } finally {
