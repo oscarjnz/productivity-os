@@ -63,12 +63,17 @@ interface MergeRow {
 /**
  * Runs the first reconcile between local Dexie and the user's cloud dashboard.
  *
- * Strategy:
+ * Strategy (cloud-first — the user's account is the source of truth):
  *   1. Look up user's default dashboard (auto-created by handle_new_user trigger).
- *   2. If cloud has widgets → cloud wins, replace local.
- *   3. If cloud is empty but local has widgets → push local up, remapping the
- *      placeholder "default" dashboardId to the real one.
- *   4. Clean stale outbox ops that referenced the old dashboardId.
+ *   2. If cloud has widgets → REPLACE local with cloud. (Same account on any
+ *      device shows the same dashboard. Local-only widgets — likely guest-mode
+ *      leftovers from a different account — are discarded; if a user wants to
+ *      keep them, they should sign in BEFORE customizing.)
+ *   3. If cloud is empty AND local has widgets → first-time login from a guest
+ *      session: migrate local up to the cloud, remapping the placeholder
+ *      "default" dashboardId to the real one.
+ *   4. If both empty → noop (user lands on empty-state CTA).
+ *   5. Clean stale outbox ops that referenced the placeholder dashboardId.
  */
 export async function runInitialSync(userId: string): Promise<InitialSyncResult> {
   const supabase = getSupabaseBrowser();
@@ -100,85 +105,73 @@ export async function runInitialSync(userId: string): Promise<InitialSyncResult>
 
   if (wErr) return { status: "skipped", reason: wErr.message };
 
-  const localWidgets = await db.widget_instances.toArray();
-
-  // Drop stale outbox ops — we re-enqueue exactly what still needs pushing
-  // below, with the correct (real) dashboard_id.
+  // Drop ALL stale outbox ops for widgets — anything pending here was created
+  // before we knew the real dashboardId (placeholder "default") and would
+  // either error out on RLS or push to the wrong dashboard.
   await db.outbox.where("entity").equals("widget_instances").delete();
 
-  // ---- MERGE: union by id, last-write-wins on updated_at ------------------
-  // Never wipe local-only widgets just because the cloud doesn't have them
-  // yet (that was the "widgets vanish on refresh" bug).
-  const merged = new Map<string, MergeRow>();
-  const needsPush = new Set<string>();
-
-  for (const c of cloudWidgets) {
-    merged.set(c.id, {
-      id: c.id,
-      dashboard_id: c.dashboard_id,
-      type: c.type,
-      pos_x: c.pos_x,
-      pos_y: c.pos_y,
-      width: c.width,
-      height: c.height,
-      config: (c.config as Record<string, unknown>) ?? {},
-      z_order: c.z_order,
-      created_at: c.created_at,
-      updated_at: c.updated_at ?? "",
-    });
-  }
-
-  for (const l of localWidgets) {
-    const local: MergeRow = {
-      id: l.id,
-      dashboard_id: dashboardId, // remap placeholder → real
-      type: l.type,
-      pos_x: l.pos_x,
-      pos_y: l.pos_y,
-      width: l.width,
-      height: l.height,
-      config: l.config,
-      z_order: l.z_order,
-      created_at: l.created_at,
-      updated_at: l.updated_at ?? "",
-    };
-    const existing = merged.get(l.id);
-    if (!existing) {
-      // Local-only — keep it AND make sure it reaches the cloud.
-      merged.set(l.id, local);
-      needsPush.add(l.id);
-    } else if (local.updated_at > existing.updated_at) {
-      // Local edited more recently than cloud — local wins, push it up.
-      merged.set(l.id, local);
-      needsPush.add(l.id);
+  // ---- Case A: cloud has widgets → cloud wins, replace local entirely. ---
+  if (cloudWidgets.length > 0) {
+    await db.widget_instances.clear();
+    for (const c of cloudWidgets) {
+      await db.widget_instances.put({
+        id: c.id,
+        dashboard_id: c.dashboard_id,
+        type: c.type,
+        pos_x: c.pos_x,
+        pos_y: c.pos_y,
+        width: c.width,
+        height: c.height,
+        config: (c.config as Record<string, unknown>) ?? {},
+        z_order: c.z_order,
+        created_at: c.created_at,
+        updated_at: c.updated_at ?? new Date().toISOString(),
+      });
     }
-    // else: cloud is newer or equal — keep cloud, nothing to push.
+    useLayoutStore.getState()._replaceAll(cloudWidgets.map((c) => fromCloud(c)));
+    return { status: "merged", dashboardId };
   }
 
-  const mergedRows = [...merged.values()];
+  // ---- Case B: cloud empty, local has guest-mode widgets → push them up.--
+  const localWidgets = await db.widget_instances.toArray();
+  if (localWidgets.length > 0) {
+    const migrated: MergeRow[] = [];
+    for (const l of localWidgets) {
+      migrated.push({
+        id: l.id,
+        dashboard_id: dashboardId,
+        type: l.type,
+        pos_x: l.pos_x,
+        pos_y: l.pos_y,
+        width: l.width,
+        height: l.height,
+        config: l.config,
+        z_order: l.z_order,
+        created_at: l.created_at,
+        updated_at: l.updated_at ?? new Date().toISOString(),
+      });
+    }
 
-  // Rewrite Dexie with the full merged set.
+    // Rewrite Dexie with the remapped rows (dashboard_id now points to the
+    // real cloud dashboard) and queue the upload.
+    await db.widget_instances.clear();
+    for (const row of migrated) {
+      await db.widget_instances.put(row);
+      const inst = fromCloud(row as unknown as CloudWidget);
+      await enqueueOp("widget_instances", "insert", inst.id, toCloudRow(inst, dashboardId));
+    }
+
+    useLayoutStore
+      .getState()
+      ._replaceAll(migrated.map((r) => fromCloud(r as unknown as CloudWidget)));
+
+    return { status: "merged", dashboardId };
+  }
+
+  // ---- Case C: both empty → user sees the empty-state CTA. ---------------
   await db.widget_instances.clear();
-  for (const row of mergedRows) await db.widget_instances.put(row);
-
-  // Push the rows that the cloud is missing / behind on.
-  for (const row of mergedRows) {
-    if (!needsPush.has(row.id)) continue;
-    const inst = fromCloud(row as unknown as CloudWidget);
-    await enqueueOp(
-      "widget_instances",
-      "insert", // upsert semantics in the sync engine
-      inst.id,
-      toCloudRow(inst, dashboardId),
-    );
-  }
-
-  useLayoutStore
-    .getState()
-    ._replaceAll(mergedRows.map((r) => fromCloud(r as unknown as CloudWidget)));
-
-  if (mergedRows.length === 0) return { status: "noop", dashboardId };
-  return { status: "merged", dashboardId };
+  useLayoutStore.getState()._replaceAll([]);
+  return { status: "noop", dashboardId };
 }
 
 /**

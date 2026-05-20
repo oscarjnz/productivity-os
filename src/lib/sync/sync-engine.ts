@@ -120,6 +120,15 @@ export class SyncEngine {
       // Skip ops that have failed too many times — let user retry manually.
       if (op.attempts >= 5) continue;
 
+      // Guard: never push widget rows that still carry the placeholder
+      // "default" dashboard_id. They were enqueued in guest mode before the
+      // user logged in; the initial-sync remaps them and re-enqueues with
+      // the real dashboardId. Letting them go now would error on RLS.
+      if (op.entity === "widget_instances" && op.payload) {
+        const dashId = (op.payload as { dashboard_id?: string }).dashboard_id;
+        if (dashId === "default") continue;
+      }
+
       try {
         const table = op.entity;
         const payload = (op.payload ?? {}) as never;

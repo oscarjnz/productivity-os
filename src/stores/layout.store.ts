@@ -44,21 +44,15 @@ interface LayoutState {
   _applyRemoteDelete: (id: string) => void;
   /** Replace everything (used by initial cloud sync). */
   _replaceAll: (instances: WidgetInstance[]) => void;
+  /** Wipe everything in-memory. Used when a user signs out or switches accounts. */
+  _clearAll: () => void;
+  /** Force the hydrated flag (used after cloud-first init). */
+  _setHydrated: (v: boolean) => void;
 }
 
-const SEED: Pick<LayoutState, "instances" | "order"> = {
-  instances: {
-    "seed-clock": {
-      id: "seed-clock",
-      type: "clock",
-      dashboardId: LOCAL_DASHBOARD_ID,
-      position: { x: 0, y: 0 },
-      size: { w: 7, h: 2 },
-      config: { format: "24h", showSeconds: true, showDate: true, timezone: "" },
-      zOrder: 0,
-    },
-  },
-  order: ["seed-clock"],
+const EMPTY_STATE: Pick<LayoutState, "instances" | "order"> = {
+  instances: {},
+  order: [],
 };
 
 function newId(): string {
@@ -108,7 +102,7 @@ async function persistDelete(id: string): Promise<void> {
 export const useLayoutStore = create<LayoutState>()(
   persist(
     (set, get) => ({
-      ...SEED,
+      ...EMPTY_STATE,
       grid: DEFAULT_GRID,
       hydrated: false,
 
@@ -201,10 +195,7 @@ export const useLayoutStore = create<LayoutState>()(
       resetLayout: () => {
         const state = get();
         for (const id of state.order) void persistDelete(id);
-        set({ ...SEED, grid: DEFAULT_GRID, hydrated: true });
-        // Seed gets a fresh insert so it lives in Dexie too.
-        const seedInst = SEED.instances["seed-clock"];
-        if (seedInst) void persistInsert(seedInst);
+        set({ ...EMPTY_STATE, grid: DEFAULT_GRID, hydrated: true });
       },
 
       _hydrateFromDb: (instances) => {
@@ -248,6 +239,14 @@ export const useLayoutStore = create<LayoutState>()(
         }
         set({ instances: map, order, hydrated: true });
       },
+
+      _clearAll: () => {
+        set({ ...EMPTY_STATE, grid: DEFAULT_GRID, hydrated: false });
+      },
+
+      _setHydrated: (v) => {
+        set({ hydrated: v });
+      },
     }),
     {
       name: "pos.layout",
@@ -259,8 +258,12 @@ export const useLayoutStore = create<LayoutState>()(
 );
 
 /**
- * Pull the canonical layout from Dexie into the store. Call once at app start.
- * Falls back to whatever zustand persist had if Dexie is empty.
+ * Pull the canonical layout from Dexie into the store. Call once at app start
+ * (guest mode) — when a user is logged in, the auth provider runs the cloud
+ * initial sync instead, which is the authoritative source.
+ *
+ * No auto-seed: an empty dashboard renders the "Add widget" CTA, which is the
+ * right UX for both first-run guests and freshly-logged-in users.
  */
 export async function hydrateLayoutFromDb(): Promise<void> {
   const db = getDb();
@@ -271,13 +274,7 @@ export async function hydrateLayoutFromDb(): Promise<void> {
 
   const rows = await db.widget_instances.toArray();
   if (rows.length === 0) {
-    // First run: persist current store contents (seed) into Dexie so cloud sync has rows.
-    const state = useLayoutStore.getState();
-    for (const id of state.order) {
-      const inst = state.instances[id];
-      if (inst) await persistInsert(inst);
-    }
-    useLayoutStore.setState({ hydrated: true });
+    useLayoutStore.setState({ instances: {}, order: [], hydrated: true });
     return;
   }
 
@@ -292,4 +289,26 @@ export async function hydrateLayoutFromDb(): Promise<void> {
   }));
 
   useLayoutStore.getState()._hydrateFromDb(instances);
+}
+
+/**
+ * Wipe local persistence — Dexie, outbox, the zustand-persist localStorage
+ * blob, and the in-memory store. Called when a user signs out or a different
+ * user logs in, so the next session starts clean and cannot contaminate
+ * another account's cloud state.
+ */
+export async function clearLocalLayoutPersistence(): Promise<void> {
+  const db = getDb();
+  if (db) {
+    await db.widget_instances.clear();
+    await db.outbox.where("entity").equals("widget_instances").delete();
+  }
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.removeItem("pos.layout");
+    } catch {
+      // localStorage may be unavailable (private mode); ignore.
+    }
+  }
+  useLayoutStore.getState()._clearAll();
 }
