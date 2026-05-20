@@ -6,8 +6,9 @@ import { defaultAIChatConfig, type AIChatConfig } from "./config";
 
 export const aiChatWidget: WidgetDefinition<AIChatConfig> = {
   type: "ai-chat",
-  name: "AI Chat",
-  description: "BYOK chat — Claude, OpenAI, Gemini, DeepSeek, Ollama & more.",
+  name: "APPI",
+  description:
+    "Asistente de Productividad Personal Integrado — conoce tu dashboard en tiempo real.",
   icon: Sparkles,
   category: "personal",
   defaultSize: { w: 5, h: 6 },

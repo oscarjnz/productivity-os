@@ -127,7 +127,8 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
           <Sparkles className="h-3 w-3" aria-hidden />
-          <span className="truncate max-w-[180px] normal-case">{cfg.model}</span>
+          <span className="font-semibold text-[var(--color-text-mid)]">APPI</span>
+          <span className="truncate max-w-[140px] normal-case opacity-60">· {cfg.model}</span>
         </span>
         {messages.length > 0 && (
           <button
@@ -146,8 +147,14 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
         className="-mr-1 flex flex-1 flex-col gap-2 overflow-y-auto pr-1"
       >
         {messages.length === 0 && !isSending && (
-          <div className="flex flex-1 items-center justify-center px-4 text-center text-[11.5px] text-[var(--color-text-lo)]">
-            Pregunta lo que quieras — notas rápidas, ideas, resúmenes.
+          <div className="flex flex-1 flex-col items-center justify-center gap-1 px-4 text-center">
+            <div className="text-[12.5px] text-[var(--color-text-mid)]">
+              Hola, soy APPI.
+            </div>
+            <div className="text-[11px] leading-snug text-[var(--color-text-lo)]">
+              Tu asistente integrado: tareas, agenda, correo, Spotify, clima y
+              cripto en un solo lugar. También puedo solo platicar.
+            </div>
           </div>
         )}
 
@@ -204,7 +211,7 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={isSending ? "Pensando…" : "Escribe un mensaje…"}
+          placeholder={isSending ? "APPI está pensando…" : "Escribe a APPI…"}
           disabled={isSending}
           className={cn(
             "flex-1 rounded-[var(--radius-sm)]",
