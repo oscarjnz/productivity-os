@@ -9,7 +9,11 @@ import { getSyncEngine } from "@/lib/sync/sync-engine";
 import { pullPreferences, pushPreferences } from "@/lib/sync/preferences-sync";
 import { captureGoogleTokens } from "./google-services";
 import { usePrefsStore } from "@/stores/prefs.store";
-import { clearLocalLayoutPersistence, useLayoutStore } from "@/stores/layout.store";
+import {
+  clearLocalLayoutPersistence,
+  flushPendingLayoutWrites,
+  useLayoutStore,
+} from "@/stores/layout.store";
 import { toast } from "@/stores/toast.store";
 
 // Tracks which user the local Dexie/zustand snapshot belongs to. When this
@@ -165,6 +169,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async (): Promise<void> => {
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
+    // Push any debounced edits up before tearing down, so the user doesn't
+    // lose the last few seconds of changes on log-out.
+    await flushPendingLayoutWrites();
+    await getSyncEngine().drain();
     await supabase.auth.signOut();
     setSession(null);
     // Wipe local persistence so the next account that logs in on this device

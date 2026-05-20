@@ -1,7 +1,6 @@
 "use client";
 
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import type { WidgetInstance, WidgetPosition, WidgetSize } from "@/types/widget.types";
 import { DEFAULT_GRID, type GridConfig } from "@/features/layout-engine/types";
 import {
@@ -84,12 +83,52 @@ async function persistInsert(inst: WidgetInstance): Promise<void> {
   await enqueueOp("widget_instances", "insert", inst.id, row);
 }
 
-async function persistUpdate(inst: WidgetInstance, patch: Record<string, unknown>): Promise<void> {
+// --- debounced update persistence ------------------------------------------
+// Rationale: the UI updates the store synchronously on every interaction
+// (drag tick, resize, typing in a settings input, etc.). Writing those to
+// Dexie + outbox synchronously means one IndexedDB transaction per keystroke
+// or per drag tick, which is wasteful even though the outbox compresses
+// downstream. Coalescing patches per widget for 800ms reduces that to one
+// write per "edit burst" — same end state, much less I/O.
+const PERSIST_DEBOUNCE_MS = 800;
+const pendingPatches = new Map<string, Record<string, unknown>>();
+const pendingTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+async function flushUpdate(id: string): Promise<void> {
+  const patch = pendingPatches.get(id);
+  pendingPatches.delete(id);
+  const timer = pendingTimers.get(id);
+  if (timer) clearTimeout(timer);
+  pendingTimers.delete(id);
+  if (!patch) return;
+
   const db = getDb();
   if (!db) return;
   const updated_at = new Date().toISOString();
-  await db.widget_instances.update(inst.id, { ...patch, updated_at });
-  await enqueueOp("widget_instances", "update", inst.id, { ...patch, updated_at });
+  await db.widget_instances.update(id, { ...patch, updated_at });
+  await enqueueOp("widget_instances", "update", id, { ...patch, updated_at });
+}
+
+function persistUpdate(inst: WidgetInstance, patch: Record<string, unknown>): void {
+  const prev = pendingPatches.get(inst.id) ?? {};
+  pendingPatches.set(inst.id, { ...prev, ...patch });
+
+  const existing = pendingTimers.get(inst.id);
+  if (existing) clearTimeout(existing);
+  pendingTimers.set(
+    inst.id,
+    setTimeout(() => void flushUpdate(inst.id), PERSIST_DEBOUNCE_MS),
+  );
+}
+
+/**
+ * Flush every pending debounced write immediately. Call on unmount, pagehide,
+ * sign-out, or whenever you want the cloud to catch up RIGHT NOW (no waiting
+ * for the 800ms timer to expire).
+ */
+export async function flushPendingLayoutWrites(): Promise<void> {
+  const ids = [...pendingTimers.keys()];
+  await Promise.all(ids.map((id) => flushUpdate(id)));
 }
 
 async function persistDelete(id: string): Promise<void> {
@@ -99,9 +138,7 @@ async function persistDelete(id: string): Promise<void> {
   await enqueueOp("widget_instances", "delete", id, null);
 }
 
-export const useLayoutStore = create<LayoutState>()(
-  persist(
-    (set, get) => ({
+export const useLayoutStore = create<LayoutState>()((set, get) => ({
       ...EMPTY_STATE,
       grid: DEFAULT_GRID,
       hydrated: false,
@@ -247,15 +284,18 @@ export const useLayoutStore = create<LayoutState>()(
       _setHydrated: (v) => {
         set({ hydrated: v });
       },
-    }),
-    {
-      name: "pos.layout",
-      storage: createJSONStorage(() => localStorage),
-      version: 2,
-      partialize: (s) => ({ instances: s.instances, order: s.order, grid: s.grid }),
-    },
-  ),
-);
+}));
+
+// Best-effort: scrub the legacy zustand-persist blob so a stale snapshot from
+// a previous account/version can't bleed back in. The cloud (when logged in)
+// or Dexie (guest) is now the only source of truth.
+if (typeof window !== "undefined") {
+  try {
+    window.localStorage.removeItem("pos.layout");
+  } catch {
+    // private mode etc — fine, nothing to scrub.
+  }
+}
 
 /**
  * Pull the canonical layout from Dexie into the store. Call once at app start
@@ -298,6 +338,12 @@ export async function hydrateLayoutFromDb(): Promise<void> {
  * another account's cloud state.
  */
 export async function clearLocalLayoutPersistence(): Promise<void> {
+  // Drop any debounced writes still buffered — they belong to the user/account
+  // we're about to wipe and must not be flushed afterwards.
+  pendingPatches.clear();
+  for (const t of pendingTimers.values()) clearTimeout(t);
+  pendingTimers.clear();
+
   const db = getDb();
   if (db) {
     await db.widget_instances.clear();

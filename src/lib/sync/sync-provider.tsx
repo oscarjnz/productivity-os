@@ -5,7 +5,7 @@ import { getSyncEngine, type SyncStatus } from "./sync-engine";
 import { subscribeWidgetInstances } from "./realtime";
 import { subscribeTasks, subscribeNotes, subscribeBookmarks } from "./entity-sync";
 import { useAuth } from "@/features/auth/auth-provider";
-import { useLayoutStore } from "@/stores/layout.store";
+import { flushPendingLayoutWrites, useLayoutStore } from "@/stores/layout.store";
 import { useToastStore } from "@/stores/toast.store";
 
 interface SyncContextValue {
@@ -45,6 +45,23 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     return () => {
       unsubscribe();
       engine.stop();
+    };
+  }, []);
+
+  // Flush debounced layout writes when the tab is being hidden/closed so a
+  // user dragging-then-closing immediately doesn't lose the last position.
+  // pagehide fires for both unload and back/forward cache cases.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onLeave = (): void => {
+      void flushPendingLayoutWrites().then(() => getSyncEngine().drain());
+    };
+    window.addEventListener("pagehide", onLeave);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") onLeave();
+    });
+    return () => {
+      window.removeEventListener("pagehide", onLeave);
     };
   }, []);
 
