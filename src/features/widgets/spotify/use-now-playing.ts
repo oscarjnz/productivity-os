@@ -13,8 +13,13 @@ export interface NowPlaying {
   albumName: string;
   albumArt: string | null;
   durationMs: number;
+  /** Position the API reported. Combine with `progressFetchedAt` to interpolate. */
   progressMs: number;
+  /** Date.now() at the moment we received `progressMs` from Spotify. */
+  progressFetchedAt: number;
   href: string | null;
+  /** Spotify track URI — used for resume on a fresh device. */
+  uri: string | null;
 }
 
 interface SpotifyTrackResponse {
@@ -25,6 +30,7 @@ interface SpotifyTrackResponse {
     duration_ms: number;
     external_urls?: { spotify?: string };
     artists: Array<{ name: string }>;
+    uri: string;
     album: {
       name: string;
       images: Array<{ url: string; width?: number; height?: number }>;
@@ -46,6 +52,15 @@ export function useSpotifyConnected(): boolean {
   return !!row;
 }
 
+/**
+ * Polls the Spotify "currently playing" endpoint.
+ *
+ * Cadence rationale: 5s while playing, 30s while paused.
+ *
+ * Polling alone CANNOT drive a smooth progress bar — Spotify's free-tier API
+ * rate is too low to call it every second. The widget interpolates the
+ * progress locally between polls using `progressFetchedAt` as the anchor.
+ */
 export function useNowPlaying(enabled: boolean) {
   return useQuery<NowPlaying | null>({
     queryKey: ["spotify-now-playing"],
@@ -58,6 +73,7 @@ export function useNowPlaying(enabled: boolean) {
         signal,
         headers: { Authorization: `Bearer ${token}` },
       });
+      const fetchedAt = Date.now();
 
       // 204 = nothing playing
       if (res.status === 204) return null;
@@ -77,10 +93,15 @@ export function useNowPlaying(enabled: boolean) {
         albumArt: data.item.album.images[0]?.url ?? null,
         durationMs: data.item.duration_ms,
         progressMs: data.progress_ms,
+        progressFetchedAt: fetchedAt,
         href: data.item.external_urls?.spotify ?? null,
+        uri: data.item.uri,
       };
     },
-    refetchInterval: 10_000,
-    staleTime: 5_000,
+    // Poll faster while playing so the displayed progress doesn't drift more
+    // than a few seconds from the server. Slow down to 30s while paused so we
+    // pick up "user started playing on phone" without hammering the API.
+    refetchInterval: (q) => (q.state.data?.isPlaying ? 5_000 : 30_000),
+    staleTime: 4_000,
   });
 }
