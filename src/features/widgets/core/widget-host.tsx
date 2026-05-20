@@ -21,6 +21,15 @@ interface WidgetHostProps {
   isEditing: boolean;
   isMobile?: boolean;
   delay?: number;
+  /** Render-time column index (0-based) — overrides instance.position.x. */
+  renderCol?: number;
+  /** Render-time column span — overrides instance.size.w. */
+  renderSpan?: number;
+  /** Total effective columns at this breakpoint (1, 6, 12). */
+  effectiveCols?: number;
+  /** When false, drag handle / resize handle don't activate even in edit
+   *  mode. Used on tablet/mobile where positions are projected, not stored. */
+  dragEnabled?: boolean;
 }
 
 function WidgetHostInner({
@@ -29,6 +38,10 @@ function WidgetHostInner({
   isEditing,
   isMobile = false,
   delay = 0,
+  renderCol,
+  renderSpan,
+  effectiveCols,
+  dragEnabled = true,
 }: WidgetHostProps) {
   const [def, setDef] = useState<WidgetDefinition | null>(null);
   const [previewSize, setPreviewSize] = useState<WidgetSize | null>(null);
@@ -48,27 +61,35 @@ function WidgetHostInner({
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: instance.id,
-    disabled: !isEditing,
+    disabled: !isEditing || !dragEnabled,
   });
 
   const displaySize = previewSize ?? instance.size;
   const Icon = def?.icon;
 
+  // Where to actually paint the widget in the CSS grid. On the canonical
+  // 12-col desktop layout, we use the stored position. On responsive
+  // breakpoints the parent projects to fewer cols and passes it in.
+  const col = renderCol ?? instance.position.x;
+  const span = renderSpan ?? displaySize.w;
+
   return (
     <motion.div
       ref={setNodeRef}
       layout={isDragging || isMobile ? false : "position"}
-      layoutDependency={`${instance.position.x},${instance.position.y}`}
+      layoutDependency={`${col},${instance.position.y},${effectiveCols ?? "_"}`}
       initial={fadeUp.initial}
       animate={fadeUp.animate}
       exit={fadeUp.exit}
       transition={{ ...fadeUp.transition, delay, layout: { duration: 0.32, ease: [0.2, 0, 0, 1] } }}
       style={{
-        gridColumn: isMobile ? "1 / -1" : `${instance.position.x + 1} / span ${displaySize.w}`,
+        gridColumn: isMobile ? "1 / -1" : `${col + 1} / span ${span}`,
         gridRow: isMobile ? "auto" : `${instance.position.y + 1} / span ${displaySize.h}`,
         minHeight: isMobile ? `${displaySize.h * geometry.rowHeight}px` : undefined,
         transform: isMobile ? undefined : CSS.Translate.toString(transform),
         zIndex: isDragging ? 50 : "auto",
+        // Make sure the dragged widget paints above the landing placeholder.
+        position: "relative",
       }}
       className={cn(
         "group/widget relative",
@@ -104,7 +125,7 @@ function WidgetHostInner({
           </div>
 
           <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-[var(--duration-fast)] group-hover/widget:opacity-100">
-            {isEditing && (
+            {isEditing && dragEnabled && (
               <button
                 type="button"
                 {...attributes}
@@ -153,7 +174,7 @@ function WidgetHostInner({
           />
         </div>
 
-        {isEditing && def && (
+        {isEditing && dragEnabled && def && (
           <ResizeHandle
             size={instance.size}
             minSize={def.minSize}
