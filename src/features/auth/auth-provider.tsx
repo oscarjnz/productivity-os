@@ -10,6 +10,7 @@ import { pullPreferences, pushPreferences } from "@/lib/sync/preferences-sync";
 import { captureGoogleTokens } from "./google-services";
 import { usePrefsStore } from "@/stores/prefs.store";
 import { clearLocalLayoutPersistence, useLayoutStore } from "@/stores/layout.store";
+import { toast } from "@/stores/toast.store";
 
 // Tracks which user the local Dexie/zustand snapshot belongs to. When this
 // changes between sessions (account switch), we wipe before re-hydrating.
@@ -116,7 +117,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        await Promise.all([runFullInitialSync(userId), pullPreferences(userId)]);
+        const [widgetResult] = await Promise.all([
+          runFullInitialSync(userId),
+          pullPreferences(userId),
+        ]);
+        // Surface what actually happened so we can diagnose missing-sync
+        // reports without asking the user to open devtools.
+        if (widgetResult) {
+          if (widgetResult.status === "pulled") {
+            toast.success(`Cloud sync: pulled ${widgetResult.pulledCount ?? 0} widgets`);
+          } else if (widgetResult.status === "pushed") {
+            toast.success(`Cloud sync: pushed ${widgetResult.pushedCount ?? 0} widgets`);
+          } else if (widgetResult.status === "noop") {
+            toast.info("Cloud sync: no widgets yet");
+          } else if (widgetResult.status === "skipped") {
+            toast.error(
+              `Cloud sync skipped: ${widgetResult.reason ?? "unknown"}`,
+              "sync-init-skipped",
+            );
+          }
+        }
       } finally {
         useLayoutStore.getState()._setHydrated(true);
         setCloudReady(true);
