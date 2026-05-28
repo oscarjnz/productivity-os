@@ -31,20 +31,23 @@ function CryptoRow({ price, currency }: { price: CryptoPrice; currency: string }
       className={cn(
         "flex items-center justify-between gap-2 rounded-[var(--radius-sm)] px-2 py-1.5",
         "transition-colors duration-[var(--duration-fast)]",
-        "hover:bg-[var(--color-bg-base)]",
+        "hover:bg-[var(--color-bg-raised)]",
       )}
     >
       <span className="truncate text-[12.5px] capitalize text-[var(--color-text-hi)]">
         {price.id}
       </span>
       <div className="flex shrink-0 items-baseline gap-2">
-        <span className="text-[12.5px] tabular text-[var(--color-text-mid)]">
+        <span className="text-[12.5px] tabular text-[var(--color-text-hi)]">
           {formatPrice(price.price, currency)}
         </span>
         <span
           className={cn(
-            "inline-flex items-center gap-0.5 text-[10.5px] tabular",
-            up ? "text-[var(--color-success)]" : "text-[var(--color-danger)]",
+            "inline-flex items-center gap-0.5 rounded-[var(--radius-xs)] px-1 py-0.5",
+            "text-[10.5px] font-medium tabular",
+            up
+              ? "bg-[var(--color-success-soft)] text-[var(--color-success)]"
+              : "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
           )}
         >
           {up ? (

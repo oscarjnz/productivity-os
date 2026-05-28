@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const fontSans = Inter({
+const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans-loaded",
   display: "swap",
 });
 
-const fontMono = JetBrains_Mono({
+const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono-loaded",
   display: "swap",

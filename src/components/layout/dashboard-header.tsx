@@ -21,30 +21,41 @@ export function DashboardHeader() {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
-    <header className="flex items-center justify-between px-1 pt-1 pb-4">
+    <header className="flex h-14 items-center justify-between gap-3 px-1">
+      {/* Brand mark */}
       <div className="flex items-center gap-2.5">
         <span
           className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            "bg-[var(--color-accent)] shadow-[0_0_10px_var(--color-accent-glow)]",
+            "relative inline-flex h-1.5 w-1.5 rounded-full",
+            "bg-[var(--color-accent)]",
+            "shadow-[0_0_0_3px_var(--color-accent-soft)]",
           )}
           aria-hidden
         />
         <span
           className={cn(
-            "text-[12px] font-semibold uppercase tracking-[0.08em]",
+            "text-[11.5px] font-semibold uppercase tracking-[0.10em]",
             "text-[var(--color-text-mid)]",
           )}
         >
           Productivity OS
         </span>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="hidden text-[12px] text-[var(--color-text-lo)] md:inline">
+        <span
+          className={cn(
+            "hidden h-3 w-px bg-[var(--color-border)] md:inline-block",
+          )}
+          aria-hidden
+        />
+        <span
+          className={cn(
+            "hidden text-[11.5px] text-[var(--color-text-lo)] tabular md:inline",
+          )}
+        >
           {date}
         </span>
+      </div>
 
+      <div className="flex items-center gap-1.5">
         <Button
           variant="ghost"
           size="sm"
@@ -68,9 +79,7 @@ export function DashboardHeader() {
           ) : (
             <Pencil className="h-3.5 w-3.5" aria-hidden />
           )}
-          <span className="hidden text-[12px] sm:inline">
-            {isEditing ? "Done" : "Edit"}
-          </span>
+          <span className="text-[12px]">{isEditing ? "Done" : "Edit"}</span>
         </Button>
 
         <Button
@@ -86,14 +95,14 @@ export function DashboardHeader() {
             className={cn(
               "ml-1 hidden items-center gap-0.5 rounded-[var(--radius-xs)] px-1.5 py-0.5",
               "border border-[var(--color-border)] bg-[var(--color-bg-base)]",
-              "text-[10px] text-[var(--color-text-lo)] tabular sm:inline-flex",
+              "text-[10px] font-medium text-[var(--color-text-lo)] tabular sm:inline-flex",
             )}
           >
             ⌘K
           </kbd>
         </Button>
 
-        <div className="ml-1">
+        <div className="ml-1.5">
           <UserMenu />
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { Wind, Droplets, MapPin } from "lucide-react";
+import { Wind, Droplets, MapPin, CloudOff } from "lucide-react";
 import { useWeather } from "./use-weather";
 import { describeWmo, type WeatherConfig } from "./config";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,9 +17,12 @@ function WeatherWidgetInner({ config }: WidgetProps<WeatherConfig>) {
 
   if (isError) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
-        <div className="text-2xl">📡</div>
-        <div className="text-[12px] text-[var(--color-text-mid)]">Unavailable</div>
+      <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+        <CloudOff className="h-6 w-6 text-[var(--color-text-lo)]" aria-hidden />
+        <div className="text-[12px] text-[var(--color-text-mid)]">Weather unavailable</div>
+        <div className="text-[10.5px] text-[var(--color-text-lo)]">
+          Network is offline or the service is down.
+        </div>
       </div>
     );
   }

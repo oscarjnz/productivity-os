@@ -62,10 +62,11 @@ function ApiKeyGate({
           className={cn(
             "rounded-[var(--radius-sm)] px-2.5 py-1.5",
             "bg-[var(--color-accent-soft)] text-[var(--color-accent)]",
-            "border border-[oklch(0.68_0.18_270/0.2)]",
+            "border border-[var(--color-accent-border)]",
             "text-[12.5px] font-medium",
-            "transition-[background-color] duration-[var(--duration-fast)]",
-            "hover:bg-[oklch(0.68_0.18_270/0.18)]",
+            "transition-[background-color,transform] duration-[var(--duration-fast)]",
+            "[transition-timing-function:var(--ease-standard)]",
+            "hover:bg-[var(--color-accent-soft-hi)]",
             "disabled:opacity-40 active:scale-[0.98]",
           )}
         >
@@ -172,8 +173,17 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
                   "max-w-[88%] rounded-[var(--radius-md)] px-2.5 py-1.5",
                   "text-[12.5px] leading-[1.5] break-words",
                   m.role === "user"
-                    ? "self-end whitespace-pre-wrap bg-[var(--color-accent-soft)] text-[var(--color-text-hi)]"
-                    : "self-start bg-[var(--color-bg-base)] text-[var(--color-text-hi)] border border-[var(--color-border)]",
+                    ? cn(
+                        "self-end whitespace-pre-wrap",
+                        "bg-[var(--color-accent-soft)] text-[var(--color-text-hi)]",
+                        "border border-[var(--color-accent-border)]",
+                      )
+                    : cn(
+                        "self-start",
+                        "bg-[var(--color-bg-raised)] text-[var(--color-text-hi)]",
+                        "border border-[var(--color-border)]",
+                        "shadow-[inset_0_1px_0_oklch(1_0_0_/_0.03)]",
+                      ),
                 )}
               >
                 {m.role === "assistant" ? (
@@ -229,9 +239,10 @@ function AIChatWidgetInner({ instanceId, config }: WidgetProps<AIChatConfig>) {
           className={cn(
             "rounded-[var(--radius-sm)] px-2.5",
             "bg-[var(--color-accent-soft)] text-[var(--color-accent)]",
-            "border border-[oklch(0.68_0.18_270/0.2)]",
-            "transition-[background-color] duration-[var(--duration-fast)]",
-            "hover:bg-[oklch(0.68_0.18_270/0.18)]",
+            "border border-[var(--color-accent-border)]",
+            "transition-[background-color,transform] duration-[var(--duration-fast)]",
+            "[transition-timing-function:var(--ease-standard)]",
+            "hover:bg-[var(--color-accent-soft-hi)]",
             "disabled:opacity-40 active:scale-[0.97]",
           )}
         >

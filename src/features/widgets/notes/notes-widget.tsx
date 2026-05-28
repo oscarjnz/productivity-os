@@ -159,10 +159,11 @@ function NotesWidgetInner({ config }: WidgetProps<NotesConfig>) {
           className={cn(
             "inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1",
             "bg-[var(--color-accent-soft)] text-[var(--color-accent)]",
-            "border border-[oklch(0.68_0.18_270/0.2)]",
+            "border border-[var(--color-accent-border)]",
             "text-[11.5px] font-medium",
-            "transition-[background-color] duration-[var(--duration-fast)]",
-            "hover:bg-[oklch(0.68_0.18_270/0.18)] active:scale-[0.97]",
+            "transition-[background-color,transform] duration-[var(--duration-fast)]",
+            "[transition-timing-function:var(--ease-standard)]",
+            "hover:bg-[var(--color-accent-soft-hi)] active:scale-[0.97]",
           )}
         >
           <Plus className="h-3 w-3" aria-hidden />

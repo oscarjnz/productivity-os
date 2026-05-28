@@ -112,9 +112,10 @@ function TasksWidgetInner({ config }: WidgetProps<TasksConfig>) {
           className={cn(
             "rounded-[var(--radius-sm)] px-2.5 py-1.5",
             "bg-[var(--color-accent-soft)] text-[var(--color-accent)]",
-            "border border-[oklch(0.68_0.18_270/0.2)]",
-            "transition-[background-color] duration-[var(--duration-fast)]",
-            "hover:bg-[oklch(0.68_0.18_270/0.18)]",
+            "border border-[var(--color-accent-border)]",
+            "transition-[background-color,transform] duration-[var(--duration-fast)]",
+            "[transition-timing-function:var(--ease-standard)]",
+            "hover:bg-[var(--color-accent-soft-hi)]",
             "disabled:opacity-40 active:scale-[0.97]",
           )}
         >

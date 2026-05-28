@@ -67,8 +67,12 @@ function GmailWidgetInner({ config }: WidgetProps<GmailConfig>) {
       </div>
 
       {data.messages.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center text-[12px] text-[var(--color-text-lo)]">
-          Inbox zero ✨
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+          <Mail className="h-6 w-6 text-[var(--color-text-lo)]" aria-hidden />
+          <div className="text-[12px] text-[var(--color-text-mid)]">Inbox zero</div>
+          <div className="text-[10.5px] text-[var(--color-text-lo)]">
+            No threads match your query.
+          </div>
         </div>
       ) : (
         <ul className="-mr-1 flex flex-1 flex-col gap-1 overflow-y-auto pr-1">

@@ -17,12 +17,12 @@ interface WidgetShellProps {
 
 /**
  * Visual container for every widget. Provides:
- * - glass surface + border
+ * - glass surface + border + inner top highlight
  * - header slot (title + toolbar)
  * - entrance animation
  * - consistent padding/radius
  *
- * Does NOT handle drag/resize — that's the Widget *Host*'s job (Phase 2).
+ * Does NOT handle drag/resize — that's the Widget *Host*'s job.
  */
 function WidgetShellInner({
   title,
@@ -40,9 +40,10 @@ function WidgetShellInner({
         "group/widget relative flex flex-col overflow-hidden",
         "rounded-[var(--radius-lg)] glass",
         "shadow-[var(--shadow-md)]",
-        "transition-[border-color,background-color] duration-[var(--duration-fast)]",
-        "[transition-timing-function:var(--ease-standard)]",
+        "transition-[border-color,background-color,box-shadow]",
+        "duration-[var(--duration-base)] [transition-timing-function:var(--ease-standard)]",
         "hover:border-[var(--color-border-strong)]",
+        "hover:bg-[var(--color-surface-hi)]",
         className,
       )}
     >
@@ -50,26 +51,46 @@ function WidgetShellInner({
         <header
           className={cn(
             "flex items-center justify-between gap-3",
-            "px-5 pt-4 pb-2",
+            "px-[var(--density-pad-x)] pt-[var(--density-pad-header-y)] pb-2",
           )}
         >
-          {title !== undefined && (
+          {title !== undefined ? (
             <div
               className={cn(
-                "text-[11px] font-semibold uppercase tracking-[0.07em]",
+                "text-[11px] font-semibold uppercase tracking-[0.08em]",
                 "text-[var(--color-text-lo)]",
+                "transition-colors duration-[var(--duration-base)]",
+                "group-hover/widget:text-[var(--color-text-mid)]",
               )}
             >
               {title}
             </div>
+          ) : (
+            <span aria-hidden />
           )}
           {toolbar !== undefined && (
-            <div className="flex items-center gap-1.5">{toolbar}</div>
+            <div
+              className={cn(
+                "flex items-center gap-1",
+                // Toolbar fades in on hover/focus to keep cards calm at rest.
+                "opacity-60 transition-opacity duration-[var(--duration-base)]",
+                "group-hover/widget:opacity-100 group-focus-within/widget:opacity-100",
+              )}
+            >
+              {toolbar}
+            </div>
           )}
         </header>
       )}
 
-      <div className={cn("flex-1 px-5 pb-5 pt-2", contentClassName)}>{children}</div>
+      <div
+        className={cn(
+          "flex-1 px-[var(--density-pad-x)] pb-[var(--density-pad-y)] pt-1.5",
+          contentClassName,
+        )}
+      >
+        {children}
+      </div>
     </motion.section>
   );
 }

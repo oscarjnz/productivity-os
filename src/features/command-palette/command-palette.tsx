@@ -85,8 +85,11 @@ export function CommandPalette() {
                     return 0;
                   }}
                 >
-                  <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-3">
-                    <Search className="h-4 w-4 shrink-0 text-[var(--color-text-lo)]" aria-hidden />
+                  <div className="flex items-center gap-2.5 border-b border-[var(--color-border)] px-4 py-3.5">
+                    <Search
+                      className="h-4 w-4 shrink-0 text-[var(--color-text-lo)]"
+                      aria-hidden
+                    />
                     <Command.Input
                       autoFocus
                       value={search}
@@ -94,14 +97,14 @@ export function CommandPalette() {
                       placeholder="Type a command or search…"
                       className={cn(
                         "flex-1 bg-transparent text-[14px] text-[var(--color-text-hi)] outline-none",
-                        "placeholder:text-[var(--color-text-lo)]",
+                        "placeholder:text-[var(--color-text-lo)] caret-[var(--color-accent)]",
                       )}
                     />
                     <kbd
                       className={cn(
                         "rounded-[var(--radius-xs)] border border-[var(--color-border)]",
                         "bg-[var(--color-bg-base)] px-1.5 py-0.5",
-                        "text-[10px] text-[var(--color-text-lo)] tabular",
+                        "text-[10px] font-medium text-[var(--color-text-lo)] tabular",
                       )}
                     >
                       ESC
@@ -215,11 +218,20 @@ function PaletteItem({ value, icon, onSelect, children }: PaletteItemProps) {
       className={cn(
         "flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-sm)] px-2.5 py-2",
         "text-[13px] text-[var(--color-text-mid)]",
+        "transition-[background-color,color] duration-[var(--duration-instant)]",
+        "[transition-timing-function:var(--ease-standard)]",
         "data-[selected=true]:bg-[var(--color-accent-soft)]",
         "data-[selected=true]:text-[var(--color-text-hi)]",
+        "data-[selected=true]:shadow-[inset_0_0_0_1px_var(--color-accent-border)]",
       )}
     >
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-text-lo)]">
+      <span
+        className={cn(
+          "flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-text-lo)]",
+          "transition-colors duration-[var(--duration-instant)]",
+          "group-data-[selected=true]:text-[var(--color-accent)]",
+        )}
+      >
         {icon}
       </span>
       {children}
