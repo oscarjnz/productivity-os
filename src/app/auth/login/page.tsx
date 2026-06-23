@@ -34,13 +34,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           Back
         </Link>
 
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--color-text-hi)]">
-            Welcome back
-          </h1>
-          <p className="text-[13px] text-[var(--color-text-mid)]">
-            Sign in to sync your dashboard across devices.
-          </p>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="relative inline-flex text-[var(--color-accent)]" aria-hidden>
+              <span className="status-dot h-1.5 w-1.5" />
+            </span>
+            <span className="text-[11.5px] font-semibold uppercase tracking-[0.10em] text-[var(--color-text-mid)]">
+              Productivity OS
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--color-text-hi)]">
+              Welcome back
+            </h1>
+            <p className="text-[13px] text-[var(--color-text-mid)]">
+              Sign in to sync your dashboard across devices.
+            </p>
+          </div>
         </div>
 
         {errorMessage && (
@@ -50,7 +60,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
         )}
 
-        <div className="rounded-[var(--radius-lg)] glass-hi p-6 shadow-[var(--shadow-md)]">
+        <div className="rounded-[var(--radius-lg)] glass-panel p-6">
           <LoginForm />
         </div>
 

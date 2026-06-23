@@ -206,7 +206,7 @@ function BookmarkRow({ bookmark, existingGroups, onUpdate, onRemove }: BookmarkR
             value={icon}
             onChange={(e) => setIcon(e.target.value)}
             maxLength={4}
-            placeholder="🚀"
+            placeholder="★"
             className="rounded-[var(--radius-xs)] border border-[var(--color-border)] bg-[var(--color-bg-base)] px-1.5 py-1 text-center text-[14px] outline-none focus:border-[var(--color-accent)]"
           />
           <input

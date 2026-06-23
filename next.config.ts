@@ -1,10 +1,15 @@
 import type { NextConfig } from "next";
+import { fileURLToPath } from "node:url";
 
 const config: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  // Pin the workspace root to this project. A stray lockfile in the user's
+  // home directory was causing Next.js to infer the wrong root and emit a
+  // build warning; anchor tracing to this folder explicitly.
+  outputFileTracingRoot: fileURLToPath(new URL(".", import.meta.url)),
   experimental: {
     optimizePackageImports: [
       "lucide-react",
