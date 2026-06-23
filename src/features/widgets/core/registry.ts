@@ -38,21 +38,60 @@ export async function loadWidget(type: string): Promise<AnyWidgetDefinition | nu
   if (!loader) return null;
   try {
     return await loader();
-  } catch {
+  } catch (err) {
+    if (typeof console !== "undefined") {
+      console.error(`[widget-registry] Failed to load "${type}":`, err);
+    }
     return null;
   }
 }
 
 /**
- * Eagerly load *all* widget definitions. Used by the picker and palette
- * to display the full catalog. Cached on first call.
+ * Eagerly load all widget definitions.
+ *
+ * IMPORTANT: this is resilient by design — if a single widget module throws
+ * on import (e.g. a syntax/type error, an icon name typo, a circular import),
+ * we must NOT take the whole picker down with it. `Promise.allSettled` lets
+ * the rest of the catalog still render and the failure is logged so the
+ * broken widget can be tracked down without breaking the dashboard.
+ *
+ * Cache is only kept on full success — a partial result is not cached so a
+ * later HMR or follow-up navigation can retry the failed module.
  */
-let catalogCache: Promise<AnyWidgetDefinition[]> | null = null;
+let catalogCache: AnyWidgetDefinition[] | null = null;
+let inflight: Promise<AnyWidgetDefinition[]> | null = null;
+
 export function loadAllWidgets(): Promise<AnyWidgetDefinition[]> {
-  if (!catalogCache) {
-    catalogCache = Promise.all(
-      Object.values(widgetRegistry).map((loader) => loader()),
-    );
-  }
-  return catalogCache;
+  if (catalogCache) return Promise.resolve(catalogCache);
+  if (inflight) return inflight;
+
+  const entries = Object.entries(widgetRegistry);
+  inflight = Promise.allSettled(entries.map(([, loader]) => loader())).then(
+    (results) => {
+      const ok: AnyWidgetDefinition[] = [];
+      let anyFailed = false;
+      results.forEach((r, i) => {
+        const [type] = entries[i]!;
+        if (r.status === "fulfilled") {
+          ok.push(r.value);
+        } else {
+          anyFailed = true;
+          if (typeof console !== "undefined") {
+            console.error(`[widget-registry] Skipping "${type}" — failed to load:`, r.reason);
+          }
+        }
+      });
+      // Only cache when every module succeeded; otherwise allow retry next call.
+      if (!anyFailed) catalogCache = ok;
+      inflight = null;
+      return ok;
+    },
+  );
+  return inflight;
+}
+
+/** Drop the in-memory catalog cache. Useful when a new widget gets registered at runtime. */
+export function invalidateWidgetCatalog(): void {
+  catalogCache = null;
+  inflight = null;
 }

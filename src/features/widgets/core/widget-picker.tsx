@@ -17,14 +17,23 @@ interface WidgetPickerProps {
 
 export function WidgetPicker({ open, onOpenChange }: WidgetPickerProps) {
   const [catalog, setCatalog] = useState<WidgetDefinition[]>([]);
+  const [loading, setLoading] = useState(false);
   const addWidget = useLayoutStore((s) => s.addWidget);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    loadAllWidgets().then((list) => {
-      if (!cancelled) setCatalog(list);
-    });
+    setLoading(true);
+    loadAllWidgets()
+      .then((list) => {
+        if (!cancelled) {
+          setCatalog(list);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -91,6 +100,21 @@ export function WidgetPicker({ open, onOpenChange }: WidgetPickerProps) {
                 </div>
 
                 <div className="grid grid-cols-1 gap-1.5 overflow-y-auto p-2 sm:grid-cols-2">
+                  {loading && catalog.length === 0 && (
+                    <div className="col-span-full px-3 py-6 text-center text-[11.5px] text-[var(--color-text-lo)]">
+                      Cargando widgets…
+                    </div>
+                  )}
+                  {!loading && catalog.length === 0 && (
+                    <div className="col-span-full flex flex-col items-center gap-1 px-3 py-6 text-center">
+                      <span className="text-[12px] text-[var(--color-text-mid)]">
+                        No se pudieron cargar los widgets
+                      </span>
+                      <span className="text-[10.5px] text-[var(--color-text-lo)]">
+                        Revisa la consola del navegador para más detalles
+                      </span>
+                    </div>
+                  )}
                   {catalog.map((def) => {
                     const Icon = def.icon;
                     return (
