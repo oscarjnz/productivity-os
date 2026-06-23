@@ -112,7 +112,7 @@ export function ManageBookmarks({ open, onOpenChange }: ManageBookmarksProps) {
                     <input
                       value={icon}
                       onChange={(e) => setIcon(e.target.value)}
-                      placeholder="🚀"
+                      placeholder="★"
                       maxLength={4}
                       aria-label="Emoji (optional)"
                       className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-base)] px-2 py-1.5 text-center text-[14px] outline-none focus:border-[var(--color-accent)]"

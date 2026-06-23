@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink, CheckCircle2 } from "lucide-react";
 import { Field, TextInput } from "@/features/widgets/core/widget-settings";
 import { Button } from "@/components/ui/button";
 import { useApiKey } from "./use-api-key";
@@ -102,9 +102,15 @@ export function AIChatSettings({ config, onChange }: WidgetSettingsProps<AIChatC
         hint="Se guarda solo en este navegador, por proveedor."
       >
         {!apiKey && provider.builtInKey && (
-          <div className="mb-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-base)] px-2.5 py-1.5 text-[11px] text-[var(--color-text-mid)]">
-            ✓ Usando la clave incluida — funciona sin configurar nada. Añade la
-            tuya solo si quieres tu propia cuota.
+          <div className="mb-1.5 flex items-start gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-success-soft)] bg-[var(--color-success-soft)] px-2.5 py-1.5 text-[11px] text-[var(--color-text-mid)]">
+            <CheckCircle2
+              className="mt-px h-3.5 w-3.5 shrink-0 text-[var(--color-success)]"
+              aria-hidden
+            />
+            <span>
+              Usando la clave incluida — funciona sin configurar nada. Añade la
+              tuya solo si quieres tu propia cuota.
+            </span>
           </div>
         )}
         {apiKey ? (
