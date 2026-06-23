@@ -27,6 +27,7 @@ export const widgetRegistry: Record<string, () => Promise<AnyWidgetDefinition>> 
   spotify: () => import("@/features/widgets/spotify").then((m) => m.spotifyWidget),
   calendar: () => import("@/features/widgets/calendar").then((m) => m.calendarWidget),
   gmail: () => import("@/features/widgets/gmail").then((m) => m.gmailWidget),
+  sports: () => import("@/features/widgets/sports").then((m) => m.sportsWidget),
 };
 
 export type WidgetType = keyof typeof widgetRegistry;
