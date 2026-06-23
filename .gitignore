@@ -19,4 +19,12 @@ Thumbs.db
 
 next-env.d.ts
 tsconfig.tsbuildinfo
-.claude/settings.local.json
+
+# Local agent tooling / scratch — never commit
+.claude/
+.agents/
+skills-lock.json
+flashcore_example.md
+
+# Duplicate nested project copy (cruft, not the real app)
+/dashboard/
