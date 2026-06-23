@@ -38,7 +38,7 @@ export function CurrencySettings({ config, onChange }: WidgetSettingsProps<Curre
         >
           {ALL_CURRENCIES.map((c) => (
             <option key={c} value={c}>
-              {CURRENCY_META[c].flag} {c} · {CURRENCY_META[c].name}
+              {c} · {CURRENCY_META[c].name}
             </option>
           ))}
         </select>
@@ -51,8 +51,8 @@ export function CurrencySettings({ config, onChange }: WidgetSettingsProps<Curre
               key={`${p.from}-${p.to}-${i}`}
               className="flex items-center justify-between gap-2 rounded-[var(--radius-xs)] border border-[var(--color-border)] bg-[var(--color-bg-base)] px-1.5 py-1"
             >
-              <span className="text-[11.5px] text-[var(--color-text-mid)]">
-                {CURRENCY_META[p.from].flag} {p.from} → {CURRENCY_META[p.to].flag} {p.to}
+              <span className="text-[11.5px] tabular text-[var(--color-text-mid)]">
+                {p.from} → {p.to}
               </span>
               <button
                 type="button"

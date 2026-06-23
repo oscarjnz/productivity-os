@@ -76,7 +76,7 @@ export function ListVariant({
 function EmptyState({ view, totalCount }: { view: SportsView; totalCount: number }) {
   let label: string;
   if (totalCount === 0) {
-    label = "Sin partidos esta semana. Añade ligas en ⚙";
+    label = "Sin partidos esta semana. Añade ligas en Settings";
   } else if (view === "live") {
     label = "Sin partidos en vivo ahora";
   } else if (view === "today") {

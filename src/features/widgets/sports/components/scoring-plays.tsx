@@ -9,28 +9,30 @@ interface ScoringPlaysProps {
   event: SportsEvent;
 }
 
-function kindIcon(kind: string): string {
+/** Compact monochrome tag for the play type — replaces emoji with a crisp,
+ *  platform-consistent label that reads as premium sports-data UI. */
+function kindTag(kind: string): string {
   switch (kind) {
     case "goal":
-      return "⚽";
+      return "GOL";
     case "penalty":
-      return "🎯";
+      return "PEN";
     case "own-goal":
-      return "🔄";
+      return "AG";
     case "home-run":
-      return "💥";
+      return "HR";
     case "run":
-      return "⚾";
+      return "R";
     case "touchdown":
-      return "🏈";
+      return "TD";
     case "field-goal":
-      return "🥅";
+      return "FG";
     case "three-pointer":
-      return "3️⃣";
+      return "3PT";
     case "two-pointer":
-      return "2️⃣";
+      return "2PT";
     case "free-throw":
-      return "🎯";
+      return "FT";
     default:
       return "•";
   }
@@ -97,11 +99,16 @@ function PlayRow({ play, event }: { play: ScoringPlay; event: SportsEvent }) {
       )}
     >
       <span
-        aria-hidden
-        className="mt-px text-[12px] leading-none"
+        className={cn(
+          "mt-px inline-flex h-4 min-w-[1.75rem] shrink-0 items-center justify-center rounded-[var(--radius-xs)] px-1",
+          "text-[9px] font-semibold uppercase tracking-[0.04em] tabular",
+          isHome
+            ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
+            : "bg-[var(--color-surface-glass)] text-[var(--color-text-mid)]",
+        )}
         title={play.kind}
       >
-        {kindIcon(play.kind)}
+        {kindTag(play.kind)}
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-baseline justify-between gap-2">

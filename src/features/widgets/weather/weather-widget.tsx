@@ -3,10 +3,18 @@
 import { memo } from "react";
 import { Wind, Droplets, MapPin, CloudOff } from "lucide-react";
 import { useWeather } from "./use-weather";
-import { describeWmo, type WeatherConfig } from "./config";
+import { describeWmo, weatherTone, type WeatherConfig } from "./config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/cn";
 import type { WidgetProps } from "@/types/widget.types";
+
+const TONE_CLASS: Record<ReturnType<typeof weatherTone>, string> = {
+  clear: "text-[var(--color-warning)]",
+  cloud: "text-[var(--color-text-mid)]",
+  rain: "text-[var(--color-accent)]",
+  snow: "text-[var(--color-text-hi)]",
+  storm: "text-[var(--color-accent-glow)]",
+};
 
 function formatTemp(t: number, units: WeatherConfig["units"]): string {
   return `${Math.round(t)}°${units === "imperial" ? "F" : "C"}`;
@@ -46,7 +54,8 @@ function WeatherWidgetInner({ config }: WidgetProps<WeatherConfig>) {
     );
   }
 
-  const [emoji, description] = describeWmo(data.weatherCode);
+  const [Icon, description] = describeWmo(data.weatherCode);
+  const tone = TONE_CLASS[weatherTone(data.weatherCode)];
   const speedUnit = data.units === "imperial" ? "mph" : "km/h";
 
   return (
@@ -63,7 +72,14 @@ function WeatherWidgetInner({ config }: WidgetProps<WeatherConfig>) {
           </div>
           <div className="mt-1 text-[13px] text-[var(--color-text-mid)]">{description}</div>
         </div>
-        <div className="text-[clamp(1.75rem,4vw,2.25rem)] leading-none">{emoji}</div>
+        <div className="relative shrink-0">
+          <div
+            className={cn("absolute -inset-2 rounded-full opacity-25 blur-xl", tone)}
+            style={{ background: "currentColor" }}
+            aria-hidden
+          />
+          <Icon className={cn("relative h-9 w-9", tone)} strokeWidth={1.5} aria-hidden />
+        </div>
       </div>
 
       <dl className="mt-3 grid grid-cols-3 gap-3 text-[11.5px] text-[var(--color-text-lo)]">

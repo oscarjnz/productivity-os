@@ -108,8 +108,14 @@ function CurrencyWidgetInner({ config, onConfigChange }: WidgetProps<CurrencyCon
           "border border-[var(--color-border)] bg-[var(--color-bg-base)] p-2",
         )}
       >
-        <span aria-hidden className="text-base">
-          {CURRENCY_META[config.base].flag}
+        <span
+          aria-hidden
+          className={cn(
+            "inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-[var(--radius-xs)] px-1.5",
+            "bg-[var(--color-accent-soft)] text-[11px] font-semibold tabular text-[var(--color-accent)]",
+          )}
+        >
+          {CURRENCY_META[config.base].symbol}
         </span>
         <input
           type="number"
@@ -167,18 +173,19 @@ function CurrencyWidgetInner({ config, onConfigChange }: WidgetProps<CurrencyCon
                 className="flex items-center justify-between gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 hover:bg-[var(--color-bg-raised)]"
               >
                 <span className="flex items-center gap-1.5 text-[11.5px] text-[var(--color-text-mid)]">
-                  <span aria-hidden>{CURRENCY_META[pair.from].flag}</span>
-                  <span className="font-medium">{pair.from}</span>
+                  <span className="font-medium tabular">{pair.from}</span>
                   <button
                     type="button"
                     onClick={() => swap(i)}
                     aria-label="Invertir par"
-                    className="text-[var(--color-text-lo)] hover:text-[var(--color-text-mid)]"
+                    className={cn(
+                      "text-[var(--color-text-lo)] transition-colors duration-[var(--duration-fast)]",
+                      "hover:text-[var(--color-accent)]",
+                    )}
                   >
                     <ArrowRightLeft className="h-2.5 w-2.5" aria-hidden />
                   </button>
-                  <span aria-hidden>{CURRENCY_META[pair.to].flag}</span>
-                  <span className="font-medium">{pair.to}</span>
+                  <span className="font-medium tabular">{pair.to}</span>
                 </span>
                 <span className="shrink-0 tabular text-[12px] font-semibold text-[var(--color-text-hi)]">
                   {converted === null ? "—" : formatAmount(converted, pair.to)}

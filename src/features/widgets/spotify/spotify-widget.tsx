@@ -9,7 +9,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { Music, ExternalLink, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { Music, ExternalLink, Pause, Play, SkipBack, SkipForward, Settings2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSpotifyConnected, useNowPlaying, type NowPlaying } from "./use-now-playing";
 import { startSpotifyAuth } from "./oauth";
@@ -42,8 +42,9 @@ function ConnectGate({ clientId }: { clientId: string }) {
       <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
         <Music className="h-6 w-6 text-[var(--color-text-lo)]" aria-hidden />
         <div className="text-[12px] text-[var(--color-text-mid)]">No Client ID set</div>
-        <div className="text-[10.5px] leading-snug text-[var(--color-text-lo)]">
-          Open ⚙ and paste your Spotify app Client ID.
+        <div className="inline-flex items-center gap-1 text-[10.5px] leading-snug text-[var(--color-text-lo)]">
+          <Settings2 className="h-3 w-3 shrink-0" aria-hidden />
+          Open settings and paste your Spotify app Client ID.
         </div>
       </div>
     );
@@ -420,8 +421,9 @@ function SpotifyWidgetInner({ config }: WidgetProps<SpotifyConfig>) {
         <div className="text-[12px] text-[var(--color-danger)]">
           {error instanceof Error ? error.message : "Spotify error"}
         </div>
-        <div className="text-[10.5px] text-[var(--color-text-lo)]">
-          Re-connect from ⚙ if this persists.
+        <div className="inline-flex items-center gap-1 text-[10.5px] text-[var(--color-text-lo)]">
+          <Settings2 className="h-3 w-3 shrink-0" aria-hidden />
+          Re-connect from settings if this persists.
         </div>
       </div>
     );

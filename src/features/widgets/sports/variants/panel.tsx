@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import type { SportsConfig } from "../config";
-import { SPORT_EMOJI, SPORT_LABELS } from "../config";
+import { SPORT_LABELS } from "../config";
 import type { SportKey, SportsEvent } from "../types";
 import { MatchRow } from "../components/match-row";
 import { MatchDrawer } from "../components/match-drawer";
@@ -113,7 +113,7 @@ export function PanelVariant({
             key={s}
             active={activeSport === s}
             onClick={() => setActiveSport(s)}
-            label={`${SPORT_EMOJI[s]} ${SPORT_LABELS[s]}`}
+            label={SPORT_LABELS[s]}
           />
         ))}
       </div>
@@ -169,7 +169,7 @@ function EmptyState({ totalCount }: { totalCount: number }) {
       </span>
       <span className="text-[10.5px] text-[var(--color-text-lo)]">
         {totalCount === 0
-          ? "Añade más ligas en ⚙ Settings"
+          ? "Añade más ligas en Settings"
           : "Prueba con otro deporte o limpia la búsqueda"}
       </span>
     </div>

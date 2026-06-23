@@ -50,11 +50,3 @@ export const SPORT_LABELS: Record<SportKey, string> = {
   baseball: "Béisbol",
   hockey: "Hockey",
 };
-
-export const SPORT_EMOJI: Record<SportKey, string> = {
-  soccer: "⚽",
-  basketball: "🏀",
-  football: "🏈",
-  baseball: "⚾",
-  hockey: "🏒",
-};

@@ -6,7 +6,7 @@ import { Field, Segmented } from "@/features/widgets/core/widget-settings";
 import { cn } from "@/lib/utils/cn";
 import type { WidgetSettingsProps } from "@/types/widget.types";
 import type { SportsConfig } from "./config";
-import { SPORT_EMOJI, SPORT_LABELS, defaultSportsConfig } from "./config";
+import { SPORT_LABELS, defaultSportsConfig } from "./config";
 import type { SportKey } from "./types";
 import { useLeagueCatalog } from "./use-sports";
 
@@ -76,7 +76,13 @@ export function SportsSettings({ config, onChange }: WidgetSettingsProps<SportsC
                     : "border-[var(--color-border)] bg-[var(--color-bg-base)] text-[var(--color-text-mid)]",
                 )}
               >
-                <span aria-hidden>{SPORT_EMOJI[s]}</span>
+                <span
+                  aria-hidden
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    active ? "bg-[var(--color-accent)]" : "bg-[var(--color-text-lo)]",
+                  )}
+                />
                 {SPORT_LABELS[s]}
               </button>
             );
@@ -118,8 +124,14 @@ export function SportsSettings({ config, onChange }: WidgetSettingsProps<SportsC
                       : "hover:bg-[var(--color-bg-raised)]",
                   )}
                 >
-                  <span className="flex min-w-0 items-center gap-1">
-                    <span aria-hidden className="text-[10px]">{SPORT_EMOJI[l.sport]}</span>
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "h-1.5 w-1.5 shrink-0 rounded-full",
+                        active ? "bg-[var(--color-accent)]" : "bg-[var(--color-text-lo)]",
+                      )}
+                    />
                     <span className="truncate text-[11.5px] text-[var(--color-text-hi)]">
                       {l.name}
                     </span>

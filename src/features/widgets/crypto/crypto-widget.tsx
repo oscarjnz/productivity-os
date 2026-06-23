@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Coins, Settings2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useCryptoPrices, type CryptoPrice } from "./use-crypto";
 import { CURRENCY_SYMBOL, type CryptoConfig } from "./config";
@@ -70,8 +70,13 @@ function CryptoWidgetInner({ config }: WidgetProps<CryptoConfig>) {
 
   if (config.coins.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-center text-[11.5px] text-[var(--color-text-lo)]">
-        Open ⚙ to add coins.
+      <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+        <Coins className="h-6 w-6 text-[var(--color-text-lo)]" strokeWidth={1.5} aria-hidden />
+        <div className="text-[11.5px] text-[var(--color-text-mid)]">No coins tracked</div>
+        <div className="inline-flex items-center gap-1 text-[10.5px] text-[var(--color-text-lo)]">
+          <Settings2 className="h-3 w-3" aria-hidden />
+          Open settings to add coins
+        </div>
       </div>
     );
   }

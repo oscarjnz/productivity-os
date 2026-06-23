@@ -14,6 +14,7 @@ import {
   Globe,
   ExternalLink,
   Github as GithubIcon,
+  Settings2,
   type LucideIcon,
 } from "lucide-react";
 import { useGitHubEvents, type GitHubEventType } from "./use-github-events";
@@ -46,8 +47,9 @@ function GitHubWidgetInner({ config }: WidgetProps<GitHubConfig>) {
       <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
         <GithubIcon className="h-6 w-6 text-[var(--color-text-lo)]" aria-hidden />
         <div className="text-[12px] text-[var(--color-text-mid)]">No username set</div>
-        <div className="text-[11px] text-[var(--color-text-lo)]">
-          Open ⚙ and add your GitHub handle.
+        <div className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-lo)]">
+          <Settings2 className="h-3 w-3" aria-hidden />
+          Open settings and add your GitHub handle.
         </div>
       </div>
     );

@@ -117,10 +117,10 @@ export function WidgetPicker({ open, onOpenChange }: WidgetPickerProps) {
                   {!loading && catalog.length === 0 && (
                     <div className="col-span-full flex flex-col items-center gap-1 px-3 py-6 text-center">
                       <span className="text-[12px] text-[var(--color-text-mid)]">
-                        Couldn&apos;t load widgets
+                        No se pudieron cargar los widgets
                       </span>
                       <span className="text-[10.5px] text-[var(--color-text-lo)]">
-                        Check the browser console for details
+                        Revisa la consola del navegador para más detalles
                       </span>
                     </div>
                   )}

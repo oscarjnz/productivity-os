@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Check, ChevronRight, Search } from "lucide-react";
 import type { SportsConfig } from "./config";
-import { SPORT_EMOJI, SPORT_LABELS } from "./config";
+import { SPORT_LABELS } from "./config";
 import type { SportKey } from "./types";
 import { useLeagueCatalog } from "./use-sports";
 import { toast } from "@/stores/toast.store";
@@ -74,7 +74,13 @@ export function SportsOnboarding({ config, onComplete }: OnboardingProps) {
                   )}
                 >
                   <span className="flex items-center gap-2">
-                    <span aria-hidden className="text-base">{SPORT_EMOJI[s]}</span>
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "h-1.5 w-1.5 shrink-0 rounded-full",
+                        active ? "bg-[var(--color-accent)]" : "bg-[var(--color-text-lo)]",
+                      )}
+                    />
                     <span className="text-[12.5px] text-[var(--color-text-hi)]">
                       {SPORT_LABELS[s]}
                     </span>
@@ -157,7 +163,13 @@ export function SportsOnboarding({ config, onComplete }: OnboardingProps) {
                   )}
                 >
                   <span className="flex min-w-0 items-center gap-1.5">
-                    <span aria-hidden className="text-[11px]">{SPORT_EMOJI[l.sport]}</span>
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "h-1.5 w-1.5 shrink-0 rounded-full",
+                        active ? "bg-[var(--color-accent)]" : "bg-[var(--color-text-lo)]",
+                      )}
+                    />
                     <span className="truncate text-[12px] text-[var(--color-text-hi)]">
                       {l.name}
                     </span>
