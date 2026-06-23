@@ -10,6 +10,12 @@ interface WidgetRendererProps {
   instance: WidgetInstance;
   isEditing: boolean;
   onConfigChange: (id: string, config: Record<string, unknown>) => void;
+  /** Pre-resolved definition from the host. When provided, the renderer skips
+   *  its own async load — the host already loaded it for the header, so this
+   *  avoids a second registry round-trip and an extra entrance flicker. */
+  def?: WidgetDefinition | null;
+  /** Host-resolved "type not found in registry" flag (pairs with `def`). */
+  missing?: boolean;
 }
 
 function WidgetSkeleton(): ReactNode {
@@ -41,23 +47,33 @@ export function WidgetRenderer({
   instance,
   isEditing,
   onConfigChange,
+  def: defProp,
+  missing: missingProp,
 }: WidgetRendererProps): ReactNode {
-  const [def, setDef] = useState<WidgetDefinition | null>(null);
-  const [missing, setMissing] = useState(false);
+  // Only self-load when the host didn't already resolve the definition. This
+  // keeps the component reusable in isolation while avoiding a duplicate load
+  // in the normal host-driven path.
+  const hostResolved = defProp !== undefined || missingProp !== undefined;
+  const [selfDef, setSelfDef] = useState<WidgetDefinition | null>(null);
+  const [selfMissing, setSelfMissing] = useState(false);
 
   useEffect(() => {
+    if (hostResolved) return;
     let cancelled = false;
-    setMissing(false);
-    setDef(null);
+    setSelfMissing(false);
+    setSelfDef(null);
     loadWidget(instance.type).then((d) => {
       if (cancelled) return;
-      if (d) setDef(d);
-      else setMissing(true);
+      if (d) setSelfDef(d);
+      else setSelfMissing(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [instance.type]);
+  }, [instance.type, hostResolved]);
+
+  const def = hostResolved ? defProp ?? null : selfDef;
+  const missing = hostResolved ? !!missingProp : selfMissing;
 
   if (missing) return <WidgetMissing type={instance.type} />;
   if (!def) return <WidgetSkeleton />;

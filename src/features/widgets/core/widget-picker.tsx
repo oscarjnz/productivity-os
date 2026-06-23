@@ -6,6 +6,7 @@ import { Plus, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { loadAllWidgets } from "./registry";
 import { useLayoutStore } from "@/stores/layout.store";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/cn";
 import { duration, easing } from "@/config/motion";
 import type { WidgetDefinition } from "@/types/widget.types";
@@ -73,7 +74,7 @@ export function WidgetPicker({ open, onOpenChange }: WidgetPickerProps) {
                 className={cn(
                   "fixed left-1/2 top-1/2 z-[var(--z-modal)] -translate-x-1/2 -translate-y-1/2",
                   "w-[min(560px,92vw)] max-h-[80vh] overflow-hidden",
-                  "rounded-[var(--radius-xl)] glass-hi shadow-[var(--shadow-lg)]",
+                  "rounded-[var(--radius-xl)] glass-panel",
                 )}
               >
                 <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-3.5">
@@ -101,17 +102,25 @@ export function WidgetPicker({ open, onOpenChange }: WidgetPickerProps) {
 
                 <div className="grid grid-cols-1 gap-1.5 overflow-y-auto p-2 sm:grid-cols-2">
                   {loading && catalog.length === 0 && (
-                    <div className="col-span-full px-3 py-6 text-center text-[11.5px] text-[var(--color-text-lo)]">
-                      Cargando widgets…
+                    <div className="col-span-full grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="flex items-start gap-3 p-3">
+                          <Skeleton className="h-9 w-9 rounded-[var(--radius-sm)]" />
+                          <div className="flex flex-1 flex-col gap-1.5 pt-0.5">
+                            <Skeleton className="h-3 w-20" />
+                            <Skeleton className="h-2.5 w-full" />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                   {!loading && catalog.length === 0 && (
                     <div className="col-span-full flex flex-col items-center gap-1 px-3 py-6 text-center">
                       <span className="text-[12px] text-[var(--color-text-mid)]">
-                        No se pudieron cargar los widgets
+                        Couldn&apos;t load widgets
                       </span>
                       <span className="text-[10.5px] text-[var(--color-text-lo)]">
-                        Revisa la consola del navegador para más detalles
+                        Check the browser console for details
                       </span>
                     </div>
                   )}

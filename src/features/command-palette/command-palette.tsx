@@ -73,7 +73,7 @@ export function CommandPalette() {
                 className={cn(
                   "fixed left-1/2 top-[15vh] z-[var(--z-palette)] -translate-x-1/2",
                   "w-[min(620px,92vw)] overflow-hidden",
-                  "rounded-[var(--radius-xl)] glass-hi shadow-[var(--shadow-lg)]",
+                  "rounded-[var(--radius-xl)] glass-panel",
                 )}
               >
                 <Dialog.Title className="sr-only">Command palette</Dialog.Title>

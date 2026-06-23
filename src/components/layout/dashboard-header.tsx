@@ -22,16 +22,15 @@ export function DashboardHeader() {
 
   return (
     <header className="flex h-14 items-center justify-between gap-3 px-1">
-      {/* Brand mark */}
+      {/* Brand mark — the accent dot breathes a slow halo so the chrome reads
+          as "live" without any literal animation noise. */}
       <div className="flex items-center gap-2.5">
         <span
-          className={cn(
-            "relative inline-flex h-1.5 w-1.5 rounded-full",
-            "bg-[var(--color-accent)]",
-            "shadow-[0_0_0_3px_var(--color-accent-soft)]",
-          )}
+          className="relative inline-flex text-[var(--color-accent)]"
           aria-hidden
-        />
+        >
+          <span className="status-dot h-1.5 w-1.5" />
+        </span>
         <span
           className={cn(
             "text-[11.5px] font-semibold uppercase tracking-[0.10em]",

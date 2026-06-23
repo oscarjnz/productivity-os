@@ -5,7 +5,10 @@ import { useLayoutStore } from "@/stores/layout.store";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutGrid } from "lucide-react";
 import { useState } from "react";
+import { motion } from "motion/react";
 import { WidgetPicker } from "@/features/widgets/core/widget-picker";
+import { duration, easing } from "@/config/motion";
+import { cn } from "@/lib/utils/cn";
 
 /**
  * Phase 2 dashboard surface.
@@ -19,23 +22,47 @@ export default function DashboardPage() {
   if (count === 0) {
     return (
       <>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]">
-            <LayoutGrid className="h-5 w-5" aria-hidden />
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: duration.slow, ease: easing.standard }}
+          className="flex min-h-[62vh] flex-col items-center justify-center gap-5 text-center"
+        >
+          {/* Layered icon plate: accent wash + glass tile + soft float. */}
+          <div className="relative">
+            <div
+              className="absolute -inset-4 rounded-full bg-[var(--color-accent-soft)] blur-2xl"
+              aria-hidden
+            />
+            <motion.div
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 4, ease: easing.standard, repeat: Infinity }}
+              className={cn(
+                "relative flex h-14 w-14 items-center justify-center",
+                "rounded-[var(--radius-lg)] glass-hi text-[var(--color-accent)]",
+                "shadow-[var(--shadow-md)]",
+              )}
+            >
+              <LayoutGrid className="h-6 w-6" aria-hidden />
+            </motion.div>
           </div>
-          <div className="flex flex-col gap-1">
-            <h2 className="text-[15px] font-semibold text-[var(--color-text-hi)]">
-              Your dashboard is empty
+          <div className="flex flex-col gap-1.5">
+            <h2 className="text-[17px] font-semibold tracking-tight text-[var(--color-text-hi)]">
+              Build your dashboard
             </h2>
-            <p className="max-w-[320px] text-[12.5px] text-[var(--color-text-lo)]">
-              Add a widget to get started. Press <kbd className="rounded-[var(--radius-xs)] border border-[var(--color-border)] bg-[var(--color-bg-base)] px-1.5 py-0.5 text-[10px] tabular">⌘K</kbd> any time to open the command palette.
+            <p className="max-w-[340px] text-[12.5px] leading-relaxed text-[var(--color-text-lo)]">
+              Drop in your first widget to track what matters. Press{" "}
+              <kbd className="rounded-[var(--radius-xs)] border border-[var(--color-border)] bg-[var(--color-bg-base)] px-1.5 py-0.5 text-[10px] tabular">
+                ⌘K
+              </kbd>{" "}
+              anytime for the command palette.
             </p>
           </div>
           <Button variant="primary" size="md" onClick={() => setPickerOpen(true)}>
             <Plus className="h-3.5 w-3.5" aria-hidden />
             Add widget
           </Button>
-        </div>
+        </motion.div>
         <WidgetPicker open={pickerOpen} onOpenChange={setPickerOpen} />
       </>
     );

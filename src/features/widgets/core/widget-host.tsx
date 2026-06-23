@@ -44,15 +44,23 @@ function WidgetHostInner({
   dragEnabled = true,
 }: WidgetHostProps) {
   const [def, setDef] = useState<WidgetDefinition | null>(null);
+  const [missing, setMissing] = useState(false);
   const [previewSize, setPreviewSize] = useState<WidgetSize | null>(null);
   const removeWidget = useLayoutStore((s) => s.removeWidget);
   const resizeWidget = useLayoutStore((s) => s.resizeWidget);
   const updateConfig = useLayoutStore((s) => s.updateConfig);
 
+  // Single source of truth for the definition: the host resolves it once (for
+  // the header icon/name/settings) and hands it to the renderer, so the widget
+  // is only loaded from the registry one time.
   useEffect(() => {
     let cancelled = false;
+    setMissing(false);
+    setDef(null);
     loadWidget(instance.type).then((d) => {
-      if (!cancelled && d) setDef(d);
+      if (cancelled) return;
+      if (d) setDef(d);
+      else setMissing(true);
     });
     return () => {
       cancelled = true;
@@ -99,18 +107,19 @@ function WidgetHostInner({
     >
       <div
         className={cn(
-          "relative h-full w-full overflow-hidden",
+          "relative flex h-full w-full flex-col overflow-hidden",
           "rounded-[var(--radius-lg)] glass shadow-[var(--shadow-md)]",
-          "transition-[border-color,box-shadow,transform] duration-[var(--duration-fast)]",
+          "transition-[border-color,background-color,box-shadow,transform] duration-[var(--duration-base)]",
           "[transition-timing-function:var(--ease-standard)]",
-          "hover:border-[var(--color-border-strong)]",
+          "hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-hi)]",
+          "hover:shadow-[var(--shadow-lg)]",
           isDragging && "scale-[1.02] shadow-[var(--shadow-lg)] border-[var(--color-accent)]",
           isEditing && "ring-1 ring-[var(--color-border-strong)] ring-offset-0",
         )}
       >
         <header
           className={cn(
-            "flex items-center justify-between gap-3",
+            "flex shrink-0 items-center justify-between gap-3",
             "px-[var(--density-pad-x)] pt-[var(--density-pad-header-y)] pb-1.5",
           )}
         >
@@ -118,13 +127,20 @@ function WidgetHostInner({
             className={cn(
               "flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.07em]",
               "text-[var(--color-text-lo)]",
+              "transition-colors duration-[var(--duration-base)]",
+              "group-hover/widget:text-[var(--color-text-mid)]",
             )}
           >
-            {Icon && <Icon className="h-3 w-3" aria-hidden />}
+            {Icon && (
+              <Icon
+                className="h-3 w-3 text-[var(--color-text-lo)] transition-colors duration-[var(--duration-base)] group-hover/widget:text-[var(--color-accent)]"
+                aria-hidden
+              />
+            )}
             <span>{def?.name ?? instance.type}</span>
           </div>
 
-          <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-[var(--duration-fast)] group-hover/widget:opacity-100">
+          <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-[var(--duration-fast)] group-hover/widget:opacity-100 group-focus-within/widget:opacity-100">
             {isEditing && dragEnabled && (
               <button
                 type="button"
@@ -134,6 +150,7 @@ function WidgetHostInner({
                 className={cn(
                   "flex h-6 w-6 cursor-grab items-center justify-center",
                   "rounded-[var(--radius-xs)] text-[var(--color-text-lo)]",
+                  "transition-colors duration-[var(--duration-fast)]",
                   "hover:bg-[var(--color-surface-glass)] hover:text-[var(--color-text-mid)]",
                   "active:cursor-grabbing",
                 )}
@@ -157,6 +174,7 @@ function WidgetHostInner({
                 className={cn(
                   "flex h-6 w-6 items-center justify-center",
                   "rounded-[var(--radius-xs)] text-[var(--color-text-lo)]",
+                  "transition-colors duration-[var(--duration-fast)]",
                   "hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)]",
                 )}
               >
@@ -166,11 +184,13 @@ function WidgetHostInner({
           </div>
         </header>
 
-        <div className="h-[calc(100%-2.25rem)] px-[var(--density-pad-x)] pb-[var(--density-pad-y)] pt-1">
+        <div className="min-h-0 flex-1 px-[var(--density-pad-x)] pb-[var(--density-pad-y)] pt-1">
           <WidgetRenderer
             instance={instance}
             isEditing={isEditing}
             onConfigChange={updateConfig}
+            def={def}
+            missing={missing}
           />
         </div>
 
