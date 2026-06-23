@@ -6,6 +6,7 @@ import type { SportsConfig } from "./config";
 import { SPORT_EMOJI, SPORT_LABELS } from "./config";
 import type { SportKey } from "./types";
 import { useLeagueCatalog } from "./use-sports";
+import { toast } from "@/stores/toast.store";
 import { cn } from "@/lib/utils/cn";
 
 interface OnboardingProps {
@@ -189,13 +190,14 @@ export function SportsOnboarding({ config, onComplete }: OnboardingProps) {
         <button
           type="button"
           disabled={leagues.length === 0}
-          onClick={() =>
+          onClick={() => {
             onComplete({
               ...config,
               sports,
               leagues,
-            })
-          }
+            });
+            toast.success(`Listo · ${leagues.length} ligas guardadas`);
+          }}
           className={cn(
             "inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-3 py-1.5",
             "text-[12px] font-medium",

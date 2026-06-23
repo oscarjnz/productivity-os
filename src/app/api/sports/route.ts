@@ -6,18 +6,35 @@ import { fetchLidom } from "./_providers/lidom";
 export const runtime = "nodejs";
 
 /**
- * GET /api/sports?leagues=soccer:eng.1,basketball:nba&date=2026-06-23
+ * GET /api/sports
  *
- * If `leagues` is omitted we return a default mix (top leagues across the
- * sports the user selected). Responses are cached upstream by each provider
- * via Next's fetch revalidate (60s).
+ * Query params:
+ *   leagues=soccer:eng.1,basketball:nba   pinned league list
+ *   sports=soccer,basketball              fallback when no `leagues` provided
+ *   date=YYYY-MM-DD                       single day; otherwise we fetch today..today+7
+ *   window=N                              number of forward days (default 7, max 30)
+ *
+ * Default behavior: fetch a 7-day window forward from "today" so offseason
+ * leagues still surface their next match instead of showing empty.
  */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const leaguesParam = url.searchParams.get("leagues");
   const sportsParam = url.searchParams.get("sports");
   const dateParam = url.searchParams.get("date");
-  const date = dateParam ? new Date(dateParam) : undefined;
+  const windowParam = url.searchParams.get("window");
+
+  let opts: { date?: Date; range?: { from: Date; to: Date } };
+  if (dateParam) {
+    opts = { date: new Date(dateParam) };
+  } else {
+    const from = new Date();
+    from.setHours(0, 0, 0, 0);
+    const days = Math.min(Math.max(Number(windowParam) || 7, 1), 30);
+    const to = new Date(from);
+    to.setDate(to.getDate() + days);
+    opts = { range: { from, to } };
+  }
 
   const leagueKeys = resolveLeagueKeys(leaguesParam, sportsParam);
 
@@ -25,8 +42,8 @@ export async function GET(req: NextRequest) {
   const espnKeys = leagueKeys.filter((k) => k !== "baseball:lidom");
 
   const results = await Promise.allSettled([
-    ...espnKeys.map((k) => fetchEspnLeague(k, date)),
-    ...(lidomRequested ? [fetchLidom(date)] : []),
+    ...espnKeys.map((k) => fetchEspnLeague(k, opts)),
+    ...(lidomRequested ? [fetchLidom(opts)] : []),
   ]);
 
   const events: SportsEvent[] = [];
@@ -80,13 +97,22 @@ function resolveLeagueKeys(
     .concat(sports.includes("baseball") ? ["baseball:lidom"] : []);
 }
 
+/**
+ * Curated defaults. Includes year-round international competitions so users
+ * who only select "soccer" still see World Cup / Gold Cup / CWC matches even
+ * when domestic leagues are in offseason.
+ */
 const DEFAULT_LEAGUES = new Set([
   "soccer:eng.1",
   "soccer:esp.1",
   "soccer:uefa.champions",
   "soccer:fifa.world",
+  "soccer:fifa.cwc",
+  "soccer:concacaf.gold",
   "soccer:usa.1",
   "soccer:mex.1",
+  "soccer:arg.1",
+  "soccer:bra.1",
   "basketball:nba",
   "football:nfl",
   "baseball:mlb",

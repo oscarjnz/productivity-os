@@ -6,6 +6,7 @@ import { ExternalLink, X } from "lucide-react";
 import { motion } from "motion/react";
 import type { SportsEvent } from "../types";
 import { TeamLogo } from "./team-logo";
+import { ScoringPlays } from "./scoring-plays";
 import { cn } from "@/lib/utils/cn";
 import { duration, easing } from "@/config/motion";
 
@@ -15,7 +16,6 @@ interface MatchDrawerProps {
 }
 
 export function MatchDrawer({ event, onClose }: MatchDrawerProps) {
-  // Lock body scroll when open
   useEffect(() => {
     if (!event) return;
     const prev = document.body.style.overflow;
@@ -38,8 +38,8 @@ export function MatchDrawer({ event, onClose }: MatchDrawerProps) {
         <Dialog.Content
           aria-describedby={undefined}
           className={cn(
-            "fixed right-2 top-2 bottom-2 z-[var(--z-modal)] flex w-[min(380px,calc(100vw-1rem))] flex-col",
-            "rounded-[var(--radius-md)] glass-hi shadow-[var(--shadow-lg)] outline-none",
+            "fixed right-2 top-2 bottom-2 z-[var(--z-modal)] flex w-[min(420px,calc(100vw-1rem))] flex-col",
+            "rounded-[var(--radius-md)] glass-hi shadow-[var(--shadow-lg)] outline-none overflow-hidden",
           )}
         >
           {event && <DrawerBody event={event} onClose={onClose} />}
@@ -67,12 +67,12 @@ function DrawerBody({ event, onClose }: { event: SportsEvent; onClose: () => voi
       initial={{ x: 16, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: duration.fast, ease: easing.standard }}
-      className="flex h-full flex-col"
+      className="flex h-full flex-col overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-2 border-b border-[var(--color-border)] p-3">
+      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-[var(--color-border)] p-3">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <Dialog.Title className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
+          <Dialog.Title className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
             {event.league.name}
             {event.league.country && (
               <span className="text-[var(--color-text-lo)]/70"> · {event.league.country}</span>
@@ -96,7 +96,7 @@ function DrawerBody({ event, onClose }: { event: SportsEvent; onClose: () => voi
       </div>
 
       {/* Scoreboard */}
-      <div className="flex items-center gap-3 p-4">
+      <div className="flex shrink-0 items-center gap-3 p-4">
         <Side
           name={event.home.name}
           logo={event.home.logo}
@@ -133,8 +133,18 @@ function DrawerBody({ event, onClose }: { event: SportsEvent; onClose: () => voi
         />
       </div>
 
+      {/* Scoring plays */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="px-3 pb-1">
+          <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
+            Jugadas
+          </h4>
+        </div>
+        <ScoringPlays event={event} />
+      </div>
+
       {/* Footer / external link */}
-      <div className="mt-auto border-t border-[var(--color-border)] p-3">
+      <div className="shrink-0 border-t border-[var(--color-border)] p-3">
         {event.detailUrl ? (
           <a
             href={event.detailUrl}

@@ -8,6 +8,7 @@ import type { SportKey, SportsEvent } from "../types";
 import { MatchRow } from "../components/match-row";
 import { MatchDrawer } from "../components/match-drawer";
 import { ViewFilter } from "../components/view-filter";
+import { StatusBar } from "../components/status-bar";
 import { applyViewFilter } from "../lib/filter";
 import { cn } from "@/lib/utils/cn";
 
@@ -15,9 +16,19 @@ interface PanelProps {
   events: SportsEvent[];
   config: SportsConfig;
   onChange: (next: SportsConfig) => void;
+  isFetching: boolean;
+  fetchedAt: number;
+  onRefresh: () => void;
 }
 
-export function PanelVariant({ events, config, onChange }: PanelProps) {
+export function PanelVariant({
+  events,
+  config,
+  onChange,
+  isFetching,
+  fetchedAt,
+  onRefresh,
+}: PanelProps) {
   const [activeSport, setActiveSport] = useState<SportKey | "all">("all");
   const [query, setQuery] = useState("");
   const [openEvent, setOpenEvent] = useState<SportsEvent | null>(null);
@@ -43,8 +54,8 @@ export function PanelVariant({ events, config, onChange }: PanelProps) {
   }, [events, activeSport, config.view, query]);
 
   const favSet = useMemo(() => new Set(config.teams), [config.teams]);
+  const liveCount = events.filter((e) => e.status === "live").length;
 
-  // Group by league for the panel view
   const grouped = useMemo(() => {
     const map = new Map<string, { league: SportsEvent["league"]; events: SportsEvent[] }>();
     for (const e of filtered) {
@@ -57,7 +68,15 @@ export function PanelVariant({ events, config, onChange }: PanelProps) {
 
   return (
     <div className="flex h-full flex-col gap-2">
-      {/* Top bar */}
+      <StatusBar
+        isFetching={isFetching}
+        fetchedAt={fetchedAt}
+        liveCount={liveCount}
+        totalCount={events.length}
+        onRefresh={onRefresh}
+      />
+
+      {/* Search + view */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search
@@ -102,15 +121,13 @@ export function PanelVariant({ events, config, onChange }: PanelProps) {
       {/* Body */}
       <div className="-mr-1 flex-1 overflow-y-auto pr-1">
         {grouped.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-[11.5px] text-[var(--color-text-lo)]">
-            Sin partidos para este filtro
-          </div>
+          <EmptyState totalCount={events.length} />
         ) : (
           <div className="flex flex-col gap-3">
             {grouped.map(({ league, events: leagueEvents }) => (
               <section key={league.id}>
                 <div className="mb-1 flex items-center gap-1.5 px-1">
-                  <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-mid)]">
                     {league.name}
                   </span>
                   {league.country && (
@@ -118,6 +135,9 @@ export function PanelVariant({ events, config, onChange }: PanelProps) {
                       · {league.country}
                     </span>
                   )}
+                  <span className="ml-auto text-[9px] tabular text-[var(--color-text-lo)]">
+                    {leagueEvents.length}
+                  </span>
                 </div>
                 <ul className="flex flex-col gap-0.5">
                   {leagueEvents.map((ev) => (
@@ -137,6 +157,21 @@ export function PanelVariant({ events, config, onChange }: PanelProps) {
       </div>
 
       <MatchDrawer event={openEvent} onClose={() => setOpenEvent(null)} />
+    </div>
+  );
+}
+
+function EmptyState({ totalCount }: { totalCount: number }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
+      <span className="text-[12px] text-[var(--color-text-mid)]">
+        {totalCount === 0 ? "Sin partidos esta semana" : "Sin resultados para tu filtro"}
+      </span>
+      <span className="text-[10.5px] text-[var(--color-text-lo)]">
+        {totalCount === 0
+          ? "Añade más ligas en ⚙ Settings"
+          : "Prueba con otro deporte o limpia la búsqueda"}
+      </span>
     </div>
   );
 }

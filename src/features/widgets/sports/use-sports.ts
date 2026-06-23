@@ -1,7 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { LeagueSummary, SportsEvent, SportsFeed, SportKey } from "./types";
+import type {
+  LeagueSummary,
+  MatchDetail,
+  SportsEvent,
+  SportsFeed,
+  SportKey,
+} from "./types";
 
 interface UseSportsOptions {
   leagues: string[];
@@ -60,6 +66,30 @@ export function bucketEvents(events: SportsEvent[]) {
   }
 
   return { live, upcoming, finished };
+}
+
+export function useEventDetail(
+  eventId: string | null,
+  leagueId: string | null,
+  status: SportsEvent["status"] | null,
+) {
+  return useQuery<MatchDetail>({
+    queryKey: ["sports", "event", eventId, leagueId],
+    enabled: !!eventId && !!leagueId,
+    queryFn: async ({ signal }) => {
+      if (!eventId || !leagueId) throw new Error("Missing event/league id");
+      const res = await fetch(
+        `/api/sports/event/${encodeURIComponent(eventId)}?league=${encodeURIComponent(leagueId)}`,
+        { signal },
+      );
+      if (!res.ok) throw new Error(`Event detail ${res.status}`);
+      return (await res.json()) as MatchDetail;
+    },
+    /** Refresh live matches every 30s; finished/scheduled stay cached. */
+    staleTime: status === "live" ? 30_000 : 5 * 60_000,
+    refetchInterval: status === "live" ? 30_000 : false,
+    gcTime: 10 * 60_000,
+  });
 }
 
 /** Pin events whose teams are favorited to the top of their bucket. */

@@ -32,8 +32,12 @@ export const ESPN_LEAGUES: Record<
   "soccer:uefa.europa": { sport: "soccer", path: "soccer/uefa.europa", name: "UEFA Europa League", shortName: "UEL", country: null },
   "soccer:conmebol.libertadores": { sport: "soccer", path: "soccer/conmebol.libertadores", name: "Copa Libertadores", shortName: "LIB", country: null },
   "soccer:fifa.world": { sport: "soccer", path: "soccer/fifa.world", name: "FIFA World Cup", shortName: "WC", country: null },
+  "soccer:fifa.world.u20": { sport: "soccer", path: "soccer/fifa.world.u20", name: "FIFA U-20 World Cup", shortName: "U20 WC", country: null },
+  "soccer:fifa.cwc": { sport: "soccer", path: "soccer/fifa.cwc", name: "FIFA Club World Cup", shortName: "CWC", country: null },
   "soccer:fifa.worldq.conmebol": { sport: "soccer", path: "soccer/fifa.worldq.conmebol", name: "WC Qualifiers - CONMEBOL", shortName: "WCQ-CONMEBOL", country: null },
   "soccer:fifa.worldq.concacaf": { sport: "soccer", path: "soccer/fifa.worldq.concacaf", name: "WC Qualifiers - CONCACAF", shortName: "WCQ-CONCACAF", country: null },
+  "soccer:concacaf.gold": { sport: "soccer", path: "soccer/concacaf.gold", name: "CONCACAF Gold Cup", shortName: "GOLD CUP", country: null },
+  "soccer:conmebol.america": { sport: "soccer", path: "soccer/conmebol.america", name: "Copa América", shortName: "COPA AM", country: null },
   "soccer:mex.1": { sport: "soccer", path: "soccer/mex.1", name: "Liga MX", shortName: "LIGA MX", country: "Mexico" },
   "soccer:arg.1": { sport: "soccer", path: "soccer/arg.1", name: "Liga Profesional", shortName: "AR1", country: "Argentina" },
   "soccer:bra.1": { sport: "soccer", path: "soccer/bra.1", name: "Brasileirão", shortName: "BRA1", country: "Brazil" },
@@ -130,15 +134,25 @@ function ymd(d: Date): string {
   return `${y}${m}${day}`;
 }
 
+export interface EspnFetchOptions {
+  /** Single day. Mutually exclusive with `range`. */
+  date?: Date;
+  /** Date range: from..to inclusive. ESPN supports YYYYMMDD-YYYYMMDD. */
+  range?: { from: Date; to: Date };
+}
+
 export async function fetchEspnLeague(
   leagueKey: string,
-  date?: Date,
+  opts: EspnFetchOptions = {},
 ): Promise<SportsEvent[]> {
   const meta = ESPN_LEAGUES[leagueKey];
   if (!meta) return [];
 
-  const dates = date ? `?dates=${ymd(date)}` : "";
-  const url = `${BASE}/${meta.path}/scoreboard${dates}`;
+  let qs = "";
+  if (opts.range) qs = `?dates=${ymd(opts.range.from)}-${ymd(opts.range.to)}`;
+  else if (opts.date) qs = `?dates=${ymd(opts.date)}`;
+
+  const url = `${BASE}/${meta.path}/scoreboard${qs}`;
 
   const res = await fetch(url, {
     headers: { Accept: "application/json" },

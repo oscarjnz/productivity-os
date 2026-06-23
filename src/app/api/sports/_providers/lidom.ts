@@ -47,10 +47,17 @@ function ymd(d: Date): string {
   return `${y}${m}${day}`;
 }
 
-async function fetchLidomViaEspn(date?: Date): Promise<SportsEvent[]> {
+interface LidomFetchOptions {
+  date?: Date;
+  range?: { from: Date; to: Date };
+}
+
+async function fetchLidomViaEspn(opts: LidomFetchOptions = {}): Promise<SportsEvent[]> {
   // ESPN Deportes covers winter ball under "baseball/dominican-winter-league" historically.
-  const dates = date ? `?dates=${ymd(date)}` : "";
-  const url = `https://site.api.espn.com/apis/site/v2/sports/baseball/dominican-winter-league/scoreboard${dates}`;
+  let qs = "";
+  if (opts.range) qs = `?dates=${ymd(opts.range.from)}-${ymd(opts.range.to)}`;
+  else if (opts.date) qs = `?dates=${ymd(opts.date)}`;
+  const url = `https://site.api.espn.com/apis/site/v2/sports/baseball/dominican-winter-league/scoreboard${qs}`;
 
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
@@ -103,9 +110,9 @@ async function fetchLidomViaEspn(date?: Date): Promise<SportsEvent[]> {
   });
 }
 
-export async function fetchLidom(date?: Date): Promise<SportsEvent[]> {
+export async function fetchLidom(opts: LidomFetchOptions = {}): Promise<SportsEvent[]> {
   try {
-    return await fetchLidomViaEspn(date);
+    return await fetchLidomViaEspn(opts);
   } catch {
     return [];
   }

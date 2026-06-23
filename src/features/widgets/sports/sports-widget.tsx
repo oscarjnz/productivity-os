@@ -21,7 +21,7 @@ function pickVariant(config: SportsConfig, w: number, h: number): Variant {
 }
 
 function SportsWidgetInner({ config, size, onConfigChange }: WidgetProps<SportsConfig>) {
-  const { data, isLoading, isError, error, refetch } = useSportsFeed({
+  const { data, isLoading, isFetching, isError, error, refetch } = useSportsFeed({
     leagues: config.leagues,
     sports: config.sports,
   });
@@ -71,11 +71,30 @@ function SportsWidgetInner({ config, size, onConfigChange }: WidgetProps<SportsC
   }
 
   const variant = pickVariant(config, size.w, size.h);
+  const refresh = () => void refetch();
 
   if (variant === "ticker") return <TickerVariant events={events} />;
   if (variant === "list")
-    return <ListVariant events={events} config={config} onChange={onConfigChange} />;
-  return <PanelVariant events={events} config={config} onChange={onConfigChange} />;
+    return (
+      <ListVariant
+        events={events}
+        config={config}
+        onChange={onConfigChange}
+        isFetching={isFetching}
+        fetchedAt={data.fetchedAt}
+        onRefresh={refresh}
+      />
+    );
+  return (
+    <PanelVariant
+      events={events}
+      config={config}
+      onChange={onConfigChange}
+      isFetching={isFetching}
+      fetchedAt={data.fetchedAt}
+      onRefresh={refresh}
+    />
+  );
 }
 
 export const SportsWidget = memo(SportsWidgetInner);

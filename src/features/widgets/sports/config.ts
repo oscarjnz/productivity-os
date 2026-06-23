@@ -20,13 +20,22 @@ export interface SportsConfig {
 export const defaultSportsConfig: SportsConfig = {
   sports: ["soccer", "basketball", "baseball", "football"],
   leagues: [
+    // Soccer — mix of year-round international + popular domestic
+    "soccer:fifa.world",
+    "soccer:fifa.cwc",
+    "soccer:concacaf.gold",
+    "soccer:uefa.champions",
     "soccer:eng.1",
     "soccer:esp.1",
-    "soccer:uefa.champions",
+    "soccer:usa.1",
+    "soccer:mex.1",
+    "soccer:bra.1",
+    // US majors
     "basketball:nba",
     "baseball:mlb",
     "baseball:lidom",
     "football:nfl",
+    "hockey:nhl",
   ],
   teams: [],
   view: "all",

@@ -67,3 +67,36 @@ export interface TeamSummary {
   logo: string | null;
   leagueId: string | null;
 }
+
+/* ---------------------------------------------------------------------------
+ * Match detail (scoring plays, box score)
+ * ------------------------------------------------------------------------- */
+
+/** A single scoring event within a match — goal, run, touchdown, etc. */
+export interface ScoringPlay {
+  id: string;
+  /** Who scored (best-effort, language depends on provider). */
+  scorer: string | null;
+  /** Assist or RBI when applicable. */
+  assist: string | null;
+  /** Time / inning / quarter display (e.g. "67'", "Top 3", "Q2 04:21"). */
+  clock: string | null;
+  /** Plain-language description of the play. */
+  text: string;
+  /** Team id that scored. */
+  teamId: string;
+  /** Type tag: "goal", "penalty", "own-goal", "home-run", "run", "touchdown", "field-goal", "rush"… */
+  kind: string;
+  /** Score after the play (home–away). */
+  homeScore: number | null;
+  awayScore: number | null;
+}
+
+export interface MatchDetail {
+  eventId: string;
+  status: EventStatus;
+  clock: string | null;
+  scoringPlays: ScoringPlay[];
+  /** Lineups/box-score TBD per sport; minimal for now. */
+  venue: string | null;
+}
