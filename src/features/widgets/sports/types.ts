@@ -92,6 +92,51 @@ export interface ScoringPlay {
   awayScore: number | null;
 }
 
+/* ---------------------------------------------------------------------------
+ * Rich detail (soccer, via API-Football) — all optional; absent when the key
+ * isn't set or the fixture couldn't be matched.
+ * ------------------------------------------------------------------------- */
+
+export type Side = "home" | "away";
+
+export interface LineupPlayer {
+  name: string;
+  number: number | null;
+  /** Position code: G / D / M / F (best-effort). */
+  pos: string | null;
+}
+
+export interface TeamLineup {
+  side: Side;
+  formation: string | null;
+  coach: string | null;
+  startXI: LineupPlayer[];
+  subs: LineupPlayer[];
+}
+
+export interface TimelineEvent {
+  /** Minute display, e.g. "23'", "45+2'". */
+  minute: string;
+  type: "goal" | "card" | "subst" | "var" | "other";
+  /** Provider detail, e.g. "Normal Goal", "Yellow Card". */
+  detail: string;
+  side: Side;
+  player: string | null;
+  /** Assist (goal) or player coming on (subst). */
+  assist: string | null;
+}
+
+export interface MatchStat {
+  label: string;
+  home: string | number | null;
+  away: string | number | null;
+}
+
+export interface MatchLineups {
+  home: TeamLineup;
+  away: TeamLineup;
+}
+
 export interface MatchDetail {
   eventId: string;
   status: EventStatus;
@@ -99,4 +144,10 @@ export interface MatchDetail {
   scoringPlays: ScoringPlay[];
   /** Lineups/box-score TBD per sport; minimal for now. */
   venue: string | null;
+  /** Rich soccer detail from API-Football, when available. */
+  lineups?: MatchLineups | null;
+  timeline?: TimelineEvent[] | null;
+  stats?: MatchStat[] | null;
+  /** True when API-Football enrichment succeeded (drawer prefers it). */
+  enriched?: boolean;
 }

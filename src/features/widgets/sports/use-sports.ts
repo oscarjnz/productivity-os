@@ -68,18 +68,24 @@ export function bucketEvents(events: SportsEvent[]) {
   return { live, upcoming, finished };
 }
 
-export function useEventDetail(
-  eventId: string | null,
-  leagueId: string | null,
-  status: SportsEvent["status"] | null,
-) {
+export function useEventDetail(event: SportsEvent | null) {
+  const status = event?.status ?? null;
   return useQuery<MatchDetail>({
-    queryKey: ["sports", "event", eventId, leagueId],
-    enabled: !!eventId && !!leagueId,
+    queryKey: ["sports", "event", event?.id ?? null, event?.league.id ?? null],
+    enabled: !!event,
     queryFn: async ({ signal }) => {
-      if (!eventId || !leagueId) throw new Error("Missing event/league id");
+      if (!event) throw new Error("Missing event");
+      // Team names + date + sport let the server match this match to an
+      // API-Football fixture for lineups/timeline/stats (soccer only).
+      const params = new URLSearchParams({
+        league: event.league.id,
+        sport: event.sport,
+        home: event.home.name,
+        away: event.away.name,
+        date: event.startsAt,
+      });
       const res = await fetch(
-        `/api/sports/event/${encodeURIComponent(eventId)}?league=${encodeURIComponent(leagueId)}`,
+        `/api/sports/event/${encodeURIComponent(event.id)}?${params.toString()}`,
         { signal },
       );
       if (!res.ok) throw new Error(`Event detail ${res.status}`);

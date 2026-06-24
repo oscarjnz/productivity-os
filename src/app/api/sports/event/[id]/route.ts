@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { MatchDetail, ScoringPlay } from "@/features/widgets/sports/types";
 import { ESPN_LEAGUES } from "../../_providers/espn";
+import { enrichSoccerMatch, hasApiFootball } from "../../_providers/apifootball";
 
 export const runtime = "nodejs";
 
@@ -154,6 +155,31 @@ export async function GET(
     scoringPlays: plays,
     venue: data.gameInfo?.venue?.fullName ?? null,
   };
+
+  // Soccer enrichment via API-Football (lineups / timeline / stats). Strictly
+  // additive and wrapped so a failure never degrades the ESPN-based response.
+  const sport = url.searchParams.get("sport");
+  const home = url.searchParams.get("home");
+  const away = url.searchParams.get("away");
+  const date = url.searchParams.get("date");
+  if (sport === "soccer" && home && away && date && hasApiFootball()) {
+    try {
+      const extra = await enrichSoccerMatch({
+        homeName: home,
+        awayName: away,
+        isoDate: date,
+        live: status === "live",
+      });
+      if (extra) {
+        detail.lineups = extra.lineups;
+        detail.timeline = extra.timeline;
+        detail.stats = extra.stats;
+        detail.enriched = true;
+      }
+    } catch {
+      // keep ESPN-only detail
+    }
+  }
 
   return NextResponse.json(detail, {
     headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" },

@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ExternalLink, X } from "lucide-react";
 import { motion } from "motion/react";
 import type { SportsEvent } from "../types";
 import { TeamLogo } from "./team-logo";
 import { ScoringPlays } from "./scoring-plays";
+import { Lineups } from "./lineups";
+import { Timeline } from "./timeline";
+import { MatchStats } from "./match-stats";
+import { useEventDetail } from "../use-sports";
 import { cn } from "@/lib/utils/cn";
 import { duration, easing } from "@/config/motion";
 
@@ -59,8 +63,23 @@ function formatDate(iso: string): string {
   });
 }
 
+type DetailTab = "events" | "lineups" | "stats";
+
 function DrawerBody({ event, onClose }: { event: SportsEvent; onClose: () => void }) {
   const isLive = event.status === "live";
+  const { data: detail } = useEventDetail(event);
+  const [tab, setTab] = useState<DetailTab>("events");
+
+  const hasTimeline = !!(detail?.enriched && detail.timeline && detail.timeline.length);
+  const hasLineups = !!detail?.lineups;
+  const hasStats = !!(detail?.stats && detail.stats.length);
+
+  const tabs: { key: DetailTab; label: string }[] = [
+    { key: "events", label: hasTimeline ? "Eventos" : "Jugadas" },
+  ];
+  if (hasLineups) tabs.push({ key: "lineups", label: "Alineación" });
+  if (hasStats) tabs.push({ key: "stats", label: "Stats" });
+  const activeTab = tabs.some((t) => t.key === tab) ? tab : "events";
 
   return (
     <motion.div
@@ -133,14 +152,51 @@ function DrawerBody({ event, onClose }: { event: SportsEvent; onClose: () => voi
         />
       </div>
 
-      {/* Scoring plays */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="px-3 pb-1">
-          <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
-            Jugadas
-          </h4>
+      {/* Tabs (only when API-Football enrichment added more than scoring plays) */}
+      {tabs.length > 1 && (
+        <div className="flex shrink-0 items-center gap-1 border-b border-[var(--color-border)] px-3 pb-2">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "rounded-full px-2.5 py-1 text-[10.5px] font-medium",
+                "border transition-colors duration-[var(--duration-fast)]",
+                activeTab === t.key
+                  ? "border-[var(--color-accent)]/30 bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
+                  : "border-transparent text-[var(--color-text-lo)] hover:text-[var(--color-text-mid)]",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-        <ScoringPlays event={event} />
+      )}
+
+      {/* Detail body */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {activeTab === "events" &&
+          (hasTimeline ? (
+            <Timeline events={detail!.timeline!} />
+          ) : (
+            <>
+              <div className="px-3 pt-2 pb-1">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
+                  Jugadas
+                </h4>
+              </div>
+              <ScoringPlays event={event} />
+            </>
+          ))}
+        {activeTab === "lineups" && hasLineups && (
+          <Lineups
+            lineups={detail!.lineups!}
+            homeName={event.home.name}
+            awayName={event.away.name}
+          />
+        )}
+        {activeTab === "stats" && hasStats && <MatchStats stats={detail!.stats!} />}
       </div>
 
       {/* Footer / external link */}

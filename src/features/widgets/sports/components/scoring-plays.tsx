@@ -39,11 +39,7 @@ function kindTag(kind: string): string {
 }
 
 export function ScoringPlays({ event }: ScoringPlaysProps) {
-  const { data, isLoading, isError } = useEventDetail(
-    event.id,
-    event.league.id,
-    event.status,
-  );
+  const { data, isLoading, isError } = useEventDetail(event);
 
   if (isError) {
     return (
