@@ -112,7 +112,7 @@ function PlayRow({ play, event }: { play: ScoringPlay; event: SportsEvent }) {
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-[11.5px] font-medium text-[var(--color-text-hi)]">
+          <span className="min-w-0 truncate text-[11.5px] font-medium text-[var(--color-text-hi)]">
             {play.scorer ?? play.text.split(/[,.]/)[0]}
           </span>
           {play.clock && (

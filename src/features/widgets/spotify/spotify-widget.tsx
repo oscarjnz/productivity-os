@@ -267,7 +267,7 @@ function NowPlayingView({ track, optimisticPlaying, setOptimisticPlaying }: NowP
             ) : (
               <Pause className="h-3 w-3 shrink-0 text-[var(--color-text-lo)]" aria-hidden />
             )}
-            <span className="truncate text-[13px] font-medium text-[var(--color-text-hi)]">
+            <span className="min-w-0 truncate text-[13px] font-medium text-[var(--color-text-hi)]">
               {track.trackName}
             </span>
           </div>

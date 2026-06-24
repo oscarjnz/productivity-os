@@ -134,12 +134,12 @@ function GitHubWidgetInner({ config }: WidgetProps<GitHubConfig>) {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5 text-[11.5px]">
-                    <span className="text-[var(--color-text-mid)]">{e.description}</span>
+                    <span className="shrink-0 text-[var(--color-text-mid)]">{e.description}</span>
                     <a
                       href={e.repo.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="truncate text-[var(--color-text-hi)] no-underline hover:text-[var(--color-accent)]"
+                      className="min-w-0 truncate text-[var(--color-text-hi)] no-underline hover:text-[var(--color-accent)]"
                     >
                       {e.repo.name}
                     </a>

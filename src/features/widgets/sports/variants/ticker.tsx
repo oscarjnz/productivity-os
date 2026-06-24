@@ -4,15 +4,12 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { SportsEvent } from "../types";
 import { TeamLogo } from "../components/team-logo";
+import { formatTime, relativeDay } from "../lib/format";
 import { duration, easing } from "@/config/motion";
 import { cn } from "@/lib/utils/cn";
 
 interface TickerProps {
   events: SportsEvent[];
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
 export function TickerVariant({ events }: TickerProps) {
@@ -41,7 +38,7 @@ export function TickerVariant({ events }: TickerProps) {
   return (
     <div className="flex h-full flex-col justify-between">
       <div className="flex items-center justify-between gap-1">
-        <span className="truncate text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
+        <span className="min-w-0 truncate text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-lo)]">
           {ev.league.shortName}
         </span>
         {isLive ? (
@@ -59,8 +56,23 @@ export function TickerVariant({ events }: TickerProps) {
             FT
           </span>
         ) : (
-          <span className="text-[10px] tabular text-[var(--color-text-lo)]">
-            {formatTime(ev.startsAt)}
+          <span className="inline-flex items-center gap-1 whitespace-nowrap">
+            {(() => {
+              const rel = relativeDay(ev.startsAt);
+              return (
+                <span
+                  className={cn(
+                    "text-[9px] font-semibold uppercase tracking-[0.04em]",
+                    rel.today ? "text-[var(--color-text-lo)]" : "text-[var(--color-accent)]",
+                  )}
+                >
+                  {rel.label}
+                </span>
+              );
+            })()}
+            <span className="text-[10px] tabular text-[var(--color-text-lo)]">
+              {formatTime(ev.startsAt)}
+            </span>
           </span>
         )}
       </div>
@@ -111,7 +123,7 @@ function Side({
     <div className="flex items-center justify-between gap-2">
       <span className="flex min-w-0 items-center gap-1.5">
         <TeamLogo src={team.logo} alt={team.name} size={14} />
-        <span className="truncate text-[11.5px] text-[var(--color-text-mid)]">
+        <span className="min-w-0 truncate text-[11.5px] text-[var(--color-text-mid)]">
           {team.shortName || team.name}
         </span>
       </span>

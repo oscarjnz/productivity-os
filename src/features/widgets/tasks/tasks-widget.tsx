@@ -275,7 +275,7 @@ function SortableRow({ task, onToggle, onRemove }: SortableRowProps) {
       </button>
       <span
         className={cn(
-          "flex-1 text-[13px]",
+          "min-w-0 flex-1 text-[13px] [overflow-wrap:anywhere]",
           task.completed
             ? "text-[var(--color-text-lo)] line-through"
             : "text-[var(--color-text-hi)]",

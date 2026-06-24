@@ -87,7 +87,7 @@ function GmailWidgetInner({ config }: WidgetProps<GmailConfig>) {
               )}
             >
               <div className="flex items-baseline justify-between gap-2">
-                <span className="truncate text-[11.5px] font-medium text-[var(--color-text-hi)]">
+                <span className="min-w-0 truncate text-[11.5px] font-medium text-[var(--color-text-hi)]">
                   {m.from}
                 </span>
                 <span className="shrink-0 text-[10px] tabular text-[var(--color-text-lo)]">

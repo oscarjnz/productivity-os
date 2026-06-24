@@ -122,7 +122,7 @@ function NoteCard({ id, content, colorIndex, onChange, onColor, onDelete, autoFo
           onClick={enterEdit}
           className={cn(
             "mt-1 flex-1 cursor-text overflow-y-auto text-left",
-            "text-[12.5px] leading-[1.55] outline-none",
+            "text-[12.5px] leading-[1.55] outline-none [overflow-wrap:anywhere]",
           )}
           style={{ color: theme.text }}
         >

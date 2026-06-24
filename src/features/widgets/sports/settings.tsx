@@ -132,7 +132,7 @@ export function SportsSettings({ config, onChange }: WidgetSettingsProps<SportsC
                         active ? "bg-[var(--color-accent)]" : "bg-[var(--color-text-lo)]",
                       )}
                     />
-                    <span className="truncate text-[11.5px] text-[var(--color-text-hi)]">
+                    <span className="min-w-0 truncate text-[11.5px] text-[var(--color-text-hi)]">
                       {l.name}
                     </span>
                     {l.country && (

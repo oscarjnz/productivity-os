@@ -94,8 +94,8 @@ function WeatherWidgetInner({ config }: WidgetProps<WeatherConfig>) {
           </span>
         </div>
         <div className="flex items-center gap-1.5 justify-self-end">
-          <MapPin className="h-3 w-3" aria-hidden />
-          <span className="truncate text-[var(--color-text-mid)]">{config.city}</span>
+          <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+          <span className="min-w-0 truncate text-[var(--color-text-mid)]">{config.city}</span>
         </div>
       </dl>
     </div>

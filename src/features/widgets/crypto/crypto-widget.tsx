@@ -34,7 +34,7 @@ function CryptoRow({ price, currency }: { price: CryptoPrice; currency: string }
         "hover:bg-[var(--color-bg-raised)]",
       )}
     >
-      <span className="truncate text-[12.5px] capitalize text-[var(--color-text-hi)]">
+      <span className="min-w-0 truncate text-[12.5px] capitalize text-[var(--color-text-hi)]">
         {price.id}
       </span>
       <div className="flex shrink-0 items-baseline gap-2">

@@ -170,7 +170,7 @@ export function SportsOnboarding({ config, onComplete }: OnboardingProps) {
                         active ? "bg-[var(--color-accent)]" : "bg-[var(--color-text-lo)]",
                       )}
                     />
-                    <span className="truncate text-[12px] text-[var(--color-text-hi)]">
+                    <span className="min-w-0 truncate text-[12px] text-[var(--color-text-hi)]">
                       {l.name}
                     </span>
                     {l.country && (

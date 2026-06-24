@@ -3,6 +3,7 @@
 import { memo } from "react";
 import type { SportsEvent } from "../types";
 import { TeamLogo } from "./team-logo";
+import { formatTime, relativeDay } from "../lib/format";
 import { cn } from "@/lib/utils/cn";
 
 interface MatchRowProps {
@@ -12,15 +13,11 @@ interface MatchRowProps {
   compact?: boolean;
 }
 
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-}
-
 function MatchRowInner({ event, favoriteTeamIds, onClick, compact }: MatchRowProps) {
   const isLive = event.status === "live";
   const isFinished = event.status === "finished";
   const isScheduled = event.status === "scheduled";
+  const rel = relativeDay(event.startsAt);
 
   const homeFav = favoriteTeamIds?.has(event.home.id) ?? false;
   const awayFav = favoriteTeamIds?.has(event.away.id) ?? false;
@@ -38,7 +35,7 @@ function MatchRowInner({ event, favoriteTeamIds, onClick, compact }: MatchRowPro
       )}
     >
       {/* Status indicator column */}
-      <div className="flex w-9 shrink-0 flex-col items-center justify-center">
+      <div className="flex w-10 shrink-0 flex-col items-center justify-center gap-0.5">
         {isLive ? (
           <span className="inline-flex items-center gap-1">
             <span className="relative flex h-1.5 w-1.5">
@@ -54,9 +51,19 @@ function MatchRowInner({ event, favoriteTeamIds, onClick, compact }: MatchRowPro
             FT
           </span>
         ) : (
-          <span className="text-[10px] tabular text-[var(--color-text-lo)]">
-            {formatTime(event.startsAt)}
-          </span>
+          <>
+            <span
+              className={cn(
+                "text-[8.5px] font-semibold uppercase tracking-[0.04em] leading-none",
+                rel.today ? "text-[var(--color-text-lo)]" : "text-[var(--color-accent)]",
+              )}
+            >
+              {rel.label}
+            </span>
+            <span className="text-[10px] leading-none tabular text-[var(--color-text-lo)]">
+              {formatTime(event.startsAt)}
+            </span>
+          </>
         )}
       </div>
 
@@ -67,7 +74,7 @@ function MatchRowInner({ event, favoriteTeamIds, onClick, compact }: MatchRowPro
             <TeamLogo src={event.home.logo} alt={event.home.name} size={compact ? 14 : 16} />
             <span
               className={cn(
-                "truncate text-[12px]",
+                "min-w-0 truncate text-[12px]",
                 homeFav
                   ? "font-semibold text-[var(--color-text-hi)]"
                   : "text-[var(--color-text-mid)]",
@@ -93,7 +100,7 @@ function MatchRowInner({ event, favoriteTeamIds, onClick, compact }: MatchRowPro
             <TeamLogo src={event.away.logo} alt={event.away.name} size={compact ? 14 : 16} />
             <span
               className={cn(
-                "truncate text-[12px]",
+                "min-w-0 truncate text-[12px]",
                 awayFav
                   ? "font-semibold text-[var(--color-text-hi)]"
                   : "text-[var(--color-text-mid)]",
