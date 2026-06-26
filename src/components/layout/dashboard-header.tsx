@@ -1,14 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Command, Pencil, Plus, Check } from "lucide-react";
 import { useCurrentTime } from "@/lib/hooks/use-current-time";
 import { formatLongDate } from "@/lib/utils/format";
 import { useUIStore } from "@/stores/ui.store";
 import { Button } from "@/components/ui/button";
-import { WidgetPicker } from "@/features/widgets/core/widget-picker";
 import { UserMenu } from "@/features/auth/user-menu";
 import { cn } from "@/lib/utils/cn";
+
+// Off the critical path: the picker (Radix Dialog + motion) isn't needed for
+// first paint — it only opens on click. Lazy-loading it keeps its chunk out of
+// the dashboard's First Load JS, mirroring CommandPalette/WelcomeBanner. (2026-06-26)
+const WidgetPicker = dynamic(
+  () => import("@/features/widgets/core/widget-picker").then((m) => m.WidgetPicker),
+  { ssr: false },
+);
 
 export function DashboardHeader() {
   const now = useCurrentTime(30_000);

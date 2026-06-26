@@ -5,10 +5,17 @@ import { useLayoutStore } from "@/stores/layout.store";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutGrid } from "lucide-react";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "motion/react";
-import { WidgetPicker } from "@/features/widgets/core/widget-picker";
 import { duration, easing } from "@/config/motion";
 import { cn } from "@/lib/utils/cn";
+
+// Lazy: the picker modal isn't part of the empty-state's first paint, only of
+// the "Add widget" click. Keeps its chunk out of First Load JS. (2026-06-26)
+const WidgetPicker = dynamic(
+  () => import("@/features/widgets/core/widget-picker").then((m) => m.WidgetPicker),
+  { ssr: false },
+);
 
 /**
  * Phase 2 dashboard surface.
