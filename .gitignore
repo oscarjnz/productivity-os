@@ -25,6 +25,7 @@ tsconfig.tsbuildinfo
 .agents/
 skills-lock.json
 flashcore_example.md
+CLAUDE.md
 
 # Duplicate nested project copy (cruft, not the real app)
 /dashboard/
