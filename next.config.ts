@@ -42,6 +42,21 @@ const config: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
         ],
       },
+      {
+        // Never cache HTML documents (page navigations) so the browser always
+        // fetches the latest markup. Apply no-store to everything that is NOT a
+        // hashed static asset (/_next/static stays immutable), the image
+        // optimizer, or a known static file extension. In practice this targets
+        // HTML document responses and route handlers.
+        source:
+          "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|webp|avif|ico|woff|woff2|ttf|otf|eot|map|json|txt|xml|webmanifest)).*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, max-age=0, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };
